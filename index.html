@@ -592,4 +592,177 @@ splash=function(){$('#view').innerHTML=`<div class="ov sp2"><div class="lw"><div
  setTimeout(()=>{const o=$('#view .ov');if(o)o.classList.add('sp-out');setTimeout(()=>(window.afterSplash||(()=>S&&S.setup?(S.pin?lock():main()):setup()))(),260)},1750)};
 if(!S){S=null}
 disclaimer();
+</script>
+<script>
+/* ---- Gingo v3: Logo, Haken, Sound, Look ---- */
+function GL(s,c){return `<svg class="${c||''}" width="${s}" height="${s}" viewBox="0 0 100 100"><defs><linearGradient id="gA" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1FA39A"/><stop offset="1" stop-color="#0D5CAB"/></linearGradient><linearGradient id="gB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1368C4"/><stop offset="1" stop-color="#0B4B8F"/></linearGradient><linearGradient id="gG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D9B365"/><stop offset="1" stop-color="#C39348"/></linearGradient></defs>
+<path d="M1.5 15L43 1V12.5L13 24V57L7.5 73C3 62 1.5 55 1.5 48Z" fill="url(#gB)"/><path d="M43 1L70.5 15.5L65.5 21L43 13.4Z" fill="url(#gG)"/>
+<path d="M84.6 31C85 45 85 52 83 62C78 82 62 94 43 99V92C56 88 70 78 73.5 62C75 55 73.5 48 73.6 42Z" fill="url(#gG)"/>
+<path d="M22.5 29.5L43 22.8V34.7L34.3 37.7V44L22.5 49Z" fill="url(#gB)"/><path d="M43 22.8L58.6 27.6L50 36.5L43 34.7Z" fill="#12968F"/>
+<path d="M11 79C12 90 22 96 34 99V66C24 68 16 72 11 79Z" fill="#0B4B8F"/><path d="M38 88L43 90.5V100H38Z" fill="#0D5CAB"/>
+<path d="M16 77C14 62 30 56 44 50C62 43 72 30 85 17" fill="none" stroke="url(#gA)" stroke-width="10" stroke-linecap="round"/>
+<path d="M68 8.6L97 1.9L92 32L83 22L76 17Z" fill="#0F8E93"/></svg>`}
+logo=GL;
+function okMark(txt,amt){document.querySelectorAll('.okm').forEach(x=>x.remove());const d=document.createElement('div');d.className='okm';
+ d.innerHTML=`<div class="okc"><svg viewBox="0 0 52 52" width="84" height="84"><path d="M14 27l8 8 16-17" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" pathLength="1"/></svg></div><b>${txt}</b><span>${eur(Math.abs(amt))}</span>`;
+ $('#app').appendChild(d);try{snd('pay');if(!(S&&S.nohap))navigator.vibrate&&navigator.vibrate([25,40,25])}catch(e){}
+ setTimeout(()=>{d.classList.add('out');setTimeout(()=>d.remove(),350)},1500)}
+const _mv=move;move=function(a,l,k){_mv(a,l,k);if(a<0){const t={nfc:'Kontaktlos bezahlt',bill:'Rechnung bezahlt',friend:'Gesendet'}[k];if(t)okMark(t,a)}};
+snd=function(t){try{if(S&&S.mute)return;const c=AC(),n=c.currentTime,q=t==='pay'?[[784,0],[988,.09],[1319,.18],[1568,.3]]:t==='in'?[[880,0],[1175,.11],[1760,.24]]:[[330,0],[262,.14]];
+ q.forEach(([f,d])=>[[1,.5],[2,.18],[3,.06]].forEach(([m,a])=>{const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.value=f*m;g.gain.setValueAtTime(.0001,n+d);g.gain.exponentialRampToValueAtTime(a*.22,n+d+.015);g.gain.exponentialRampToValueAtTime(.0001,n+d+.9);o.connect(g);g.connect(c.destination);o.start(n+d);o.stop(n+d+.95)}))}catch(e){}};
+const _h3=rHome;rHome=function(v){_h3(v);const h=document.createElement('div');h.className='bh';h.innerHTML=`${GL(38)}<div><b>Gingo Bank</b><span>${(S.name||'').replace(/</g,'&lt;')}</span></div>`;v.insertBefore(h,v.firstChild)};
+const st3=document.createElement('style');st3.textContent=`.bh{display:flex;align-items:center;gap:12px;margin-bottom:10px}.bh b{display:block;font-size:18px;letter-spacing:-.3px}.bh span{font-size:13px;color:var(--mu)}
+.card{backdrop-filter:blur(10px);transition:transform .2s,box-shadow .2s}.card:active{transform:scale(.985)}.btn:not(.s):not(.d){background:linear-gradient(135deg,var(--a),color-mix(in srgb,var(--a) 70%,#fff));box-shadow:0 8px 22px -8px var(--a)}.btn{transition:transform .15s}.btn:active{transform:scale(.96)}
+.okm{position:absolute;inset:0;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:rgba(8,22,44,.8);backdrop-filter:blur(10px);color:#fff;animation:okf .25s both}.okc{width:112px;height:112px;border-radius:50%;background:linear-gradient(135deg,#1FA39A,#0D5CAB);display:grid;place-items:center;box-shadow:0 0 0 0 rgba(31,163,154,.6);animation:okp .5s cubic-bezier(.3,1.6,.5,1) both,okr 1.2s .3s}.okc path{stroke-dasharray:1;stroke-dashoffset:1;animation:okd .45s .25s forwards}.okm b{font-size:20px;margin-top:10px}.okm span{font-size:32px;font-weight:700}.okm.out{opacity:0;transition:opacity .3s}@keyframes okf{from{opacity:0}}@keyframes okp{from{transform:scale(.3);opacity:0}}@keyframes okd{to{stroke-dashoffset:0}}@keyframes okr{to{box-shadow:0 0 0 40px rgba(31,163,154,0)}}`;document.head.appendChild(st3);
+</script>
+<script>
+/* ---- Gingo v4: neuer Look + Performance ---- */
+(function(){
+ const _s=snd;let last=0;snd=function(t){const n=Date.now();if(t==='pay'&&n-last<900)return;if(t==='pay')last=n;_s(t)};
+ const _o=okMark;okMark=function(a,b){requestAnimationFrame(()=>_o(a,b))};
+ const c=document.createElement('style');c.textContent=`
+html,html.light,:root{--bg:#0A1A2F;--bg2:#12294A;--sf:#12294A;--in:#0F2240;--k:#173257;--tx:#EEF4FB;--mu:#8FA6C2;--ln:#1E3A63;--ok:#35D6A4;--no:#FF7A7A;color-scheme:dark}
+*{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;text-shadow:none!important}
+html,body{background:#06111F!important;color:var(--tx)}
+#app{background:linear-gradient(180deg,#0B1D36,#081525)!important;border:0!important;box-shadow:none!important}
+#app.glow,.glow{animation:none!important}
+.card,.tile,.sheet>div,.help details{background:var(--bg2)!important;border:1px solid var(--ln)!important;border-radius:20px!important;box-shadow:none!important;color:var(--tx)!important;animation:none!important}
+.hero{background:linear-gradient(135deg,#0D5CAB,#12968F)!important;border:0!important;color:#fff!important}
+.bal{color:#fff!important;letter-spacing:-1.5px}
+h1{font-weight:800;letter-spacing:-.8px}h2{color:var(--mu);font-size:13px;text-transform:uppercase;letter-spacing:1px}
+input,select{background:var(--in)!important;border:1px solid var(--ln)!important;color:var(--tx)!important;border-radius:14px!important;box-shadow:none!important}
+.btn{background:linear-gradient(135deg,#1FA39A,#0D5CAB)!important;color:#fff!important;border:0!important;border-radius:16px!important;box-shadow:none!important}
+.btn.s{background:var(--bg2)!important;border:1px solid var(--ln)!important}.btn.d{background:transparent!important;color:var(--no)!important;border:1px solid var(--no)!important}.btn:disabled{opacity:.35}
+nav{background:#0C203A!important;border:0!important;border-top:1px solid var(--ln)!important;box-shadow:none!important}nav button{color:var(--mu)!important}nav button.on{color:#D9B365!important;background:none!important;box-shadow:none!important}nav button.on::before{background:#D9B365!important}
+.k{background:var(--k)!important;border:0!important;color:var(--tx)!important;box-shadow:none!important}.k.g{background:transparent!important}
+.ov{background:#0A1A2F!important}.sheet{background:rgba(3,10,20,.7)!important}
+.notif,.toast{background:#12294A!important;color:var(--tx)!important;border:1px solid var(--ln)!important;box-shadow:0 8px 24px rgba(0,0,0,.4)!important}
+.tx{border-color:var(--ln)!important;animation:none!important}.av{color:#0A1A2F!important}
+.qa i{background:linear-gradient(135deg,#D9B365,#C39348)!important}
+.okm{background:rgba(6,17,31,.94)!important}
+::selection{background:#D9B365;color:#000}`;
+ document.head.appendChild(c)})();
+</script>
+<script>
+/* ---- Gingo v5: Kontaktlos ohne PIN, ohne Hänger; Kopfzeile nur 1x ---- */
+(function(){
+ const o=rPay;
+ rPay=function(v){o(v);const b=$('#tap');if(!b)return;
+  b.onclick=()=>{const L=NL(),f=L[0],store=f?f.store:'Kasse',amt=f?f.amt:Math.round((2+Math.random()*78)*100)/100;
+   if(S.card&&S.card.locked)return toast('Karte gesperrt');
+   if(amt>S.bal)return toast('Nicht genug Guthaben');
+   b.disabled=true;b.textContent='Terminal wird gesucht …';
+   try{if(!S.mute)bell(1568,0,.5,.2)}catch(e){}
+   setTimeout(()=>{move(-amt,store,'nfc');if(f&&f.mode!=='inf'&&--f.left<=0)NL().shift();save();if(tab==='pay')rPay(v)},700)}};
+ const c=document.createElement('style');c.textContent='.bh{display:none!important}.res{display:none!important}';document.head.appendChild(c);
+})();
+</script>
+<script>
+/* ---- Gingo v6: Update-Protokoll ----
+   NEUES UPDATE? Ganz oben in CHANGELOG einen neuen Eintrag einfügen (neueste zuerst). */
+const CHANGELOG=[
+ {v:'1.5',d:'24.11.2026',n:['Kontaktlos bezahlen ohne PIN','Hänger beim Kontaktlos-Bezahlen behoben','Kopfzeile nur noch einmal','Update-Protokoll in Mehr']},
+ {v:'1.4',d:'24.11.2026',n:['Komplett neues dunkles Design','Schneller: weniger Effekte']},
+ {v:'1.3',d:'24.11.2026',n:['Neues Gingo-Logo','Haken-Animation beim Bezahlen','Bessere Sounds']},
+ {v:'1.2',d:'24.11.2026',n:['Freunde-Anfragen über Firebase','Geld senden mit Annehmen/Ablehnen']}
+];
+const APPV=CHANGELOG[0].v;
+(function(){
+ const e=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+ const _m=main;
+ main=function(){_m();
+  if(!S||!S.setup)return;
+  if(!S.ver&&S.txs.length<=1&&!S.friends.length){S.ver=APPV;save();return}
+  if(S.ver===APPV)return;
+  const nw=CHANGELOG.filter(x=>!S.ver||x.v>S.ver&&parseFloat(x.v)>parseFloat(S.ver)),top=nw.length?nw:[CHANGELOG[0]];
+  S.ver=APPV;save();
+  const b=document.createElement('div');b.className='upd';
+  b.innerHTML=`<b>Update ${APPV} installiert</b><ul>${top.flatMap(x=>x.n).slice(0,5).map(x=>`<li>${e(x)}</li>`).join('')}</ul><small>Alles Weitere unter Mehr → Update-Protokoll</small>`;
+  b.onclick=()=>{b.classList.add('out');setTimeout(()=>b.remove(),300)};
+  $('#app').appendChild(b);setTimeout(()=>b.onclick(),7000)};
+ const _s=rSet;
+ rSet=function(v){_s(v);
+  const c=document.createElement('div');c.className='card';
+  c.innerHTML=`<h2 style="margin-top:0">Update-Protokoll</h2><p style="margin:0 0 10px">Aktuelle Version: <b style="color:var(--tx)">${APPV}</b></p>`+CHANGELOG.map(x=>`<div style="margin-bottom:12px"><b>Version ${x.v}</b> <span style="font-size:12px;color:var(--mu)">${x.d}</span><ul style="margin:4px 0 0;padding-left:18px;color:var(--mu);font-size:14px">${x.n.map(y=>`<li>${e(y)}</li>`).join('')}</ul></div>`).join('');
+  v.appendChild(c)};
+ const st=document.createElement('style');st.textContent='.upd{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));left:12px;right:12px;max-width:420px;margin:0 auto;z-index:80;padding:14px 16px;border-radius:20px;background:#12294A;color:#EEF4FB;border:1px solid #D9B365;box-shadow:0 10px 30px rgba(0,0,0,.45);animation:updin .4s cubic-bezier(.3,1.4,.5,1) both;cursor:pointer}.upd b{display:block;margin-bottom:4px;color:#D9B365}.upd ul{margin:0;padding-left:18px;font-size:14px}.upd small{display:block;margin-top:6px;color:#8FA6C2;font-size:12px}.upd.out{opacity:0;transform:translateY(-20px);transition:all .3s}@keyframes updin{from{opacity:0;transform:translateY(-30px)}}';document.head.appendChild(st);
+})();
+</script>
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import {getAuth,signInAnonymously} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import {getFirestore,doc,getDoc,setDoc,addDoc,updateDoc,collection,query,where,onSnapshot} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+/* >>> HIER DEINE FIREBASE-DATEN EINTRAGEN (Firebase-Konsole > Projekteinstellungen > Web-App) <<< */
+const CFG={apiKey:"DEIN_API_KEY",authDomain:"DEIN_PROJEKT.firebaseapp.com",projectId:"DEIN_PROJEKT",appId:"DEIN_APP_ID"};
+
+const ON=!CFG.apiKey.startsWith('DEIN');
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let db,uid,ready=false,started=false,fbErr='',inFr=[],inTx=[];
+const old=rFriends,oldHome=rHome,key=t=>String(t).replace(/^@/,'').toLowerCase();
+const redraw=()=>{if(tab!=='users'&&tab!=='home')return;if(document.querySelector('.sheet')||(document.activeElement&&document.activeElement.tagName==='INPUT'))return;if(S&&S.setup&&!$('#nav').hidden)render()};
+const q=(c,f)=>query(collection(db,c),where(f,'==',uid));
+
+async function boot(){
+ if(started||!ON||!S||!S.setup)return;started=true;
+ try{
+  const app=initializeApp(CFG);db=getFirestore(app);
+  uid=(await signInAnonymously(getAuth(app))).user.uid;
+  S.tag=S.tag||tagOf(S.name)+Math.floor(10+Math.random()*90);S.done=S.done||{};
+  for(let i=0;i<6;i++){
+   const r=doc(db,'users',key(S.tag)),s=await getDoc(r);
+   if(!s.exists()||s.data().uid===uid){await setDoc(r,{uid,name:S.name,tag:S.tag});break}
+   S.tag=tagOf(S.name)+Math.floor(100+Math.random()*900);
+  }
+  save();listen();ready=true;redraw();
+ }catch(e){console.error(e);fbErr='Verbindung fehlgeschlagen: '+(e.code||e.message);redraw()}
+}
+function listen(){
+ onSnapshot(q('fr','toUid'),s=>{inFr=s.docs.map(d=>({id:d.id,...d.data()}));redraw()});
+ onSnapshot(q('fr','fromUid'),s=>{s.docs.forEach(d=>{const r=d.data(),k='fr'+d.id;
+  if(r.st==='ok'&&!S.done[k]){S.done[k]=1;if(!S.friends.some(f=>f.tag===r.to))S.friends.unshift({n:r.toName,tag:r.to,uid:r.toUid,h:['Freundschaft bestätigt']});save();toast(r.toName+' hat deine Anfrage angenommen')}});redraw()});
+ onSnapshot(q('tx','toUid'),s=>{inTx=s.docs.map(d=>({id:d.id,...d.data()}));
+  inTx.forEach(t=>{if(t.st==='ok'&&!S.done[t.id]){S.done[t.id]=1;move(t.amt,t.fromName+(t.note?' · '+t.note:''),'friend')}});redraw()});
+ onSnapshot(q('tx','fromUid'),s=>{s.docs.forEach(d=>{const t=d.data();
+  if(t.st==='no'&&!S.done[d.id]){S.done[d.id]=1;move(t.amt,'Zurück von '+t.toName,'friend');toast(t.toName+' hat abgelehnt – Geld zurück')}
+  else if(t.st==='ok'&&!S.done['s'+d.id]){S.done['s'+d.id]=1;save();toast(t.toName+' hat dein Geld angenommen')}});redraw()});
+}
+
+rFriends=function(v){
+ if(!ready){old(v);v.insertAdjacentHTML('afterbegin',`<div class="card"><b>Online-Funktionen aus</b><p style="margin:6px 0 0">${ON?esc(fbErr||'Verbinde mit Firebase …'):'Trage deine Firebase-Daten im Code ein (CFG ganz unten), damit Freundschaftsanfragen und Geld senden wirklich funktionieren.'}</p></div>`);return}
+ S.friends.forEach(f=>f.h=f.h||[]);
+ const av=n=>`<div class="av" style="background:hsl(${hue(n)} 70% 80%)">${esc((n||'?')[0]).toUpperCase()}</div>`,
+  pF=inFr.filter(r=>r.st==='pending'),pT=inTx.filter(t=>t.st==='pending'),row='class="row" style="justify-content:flex-start;gap:12px"';
+ v.innerHTML=`<h1>Gingo-Freunde</h1><div class="card row"><div><div style="font-size:13px;color:var(--mu)">Dein Gingo-Name</div><b style="font-size:20px">${esc(S.tag)}</b></div><button class="btn sm s" id="cp">Kopieren</button></div>
+ ${pT.length?'<h2>Geld-Anfragen</h2>'+pT.map(t=>`<div class="card"><div ${row}>${av(t.fromName)}<div><b>${esc(t.fromName)}</b> möchte dir <b>${eur(t.amt)}</b> senden${t.note?`<div style="font-size:13px;color:var(--mu)">${esc(t.note)}</div>`:''}</div></div><div class="row" style="margin-top:12px"><button class="btn sm" data-ta="${t.id}">Annehmen</button><button class="btn sm s" data-tr="${t.id}">Ablehnen</button></div></div>`).join(''):''}
+ ${pF.length?'<h2>Freundschaftsanfragen</h2>'+pF.map(r=>`<div class="card"><div ${row}>${av(r.fromName)}<div><b>${esc(r.fromName)}</b><div style="font-size:12px;color:var(--mu)">${esc(r.from)}</div></div></div><div class="row" style="margin-top:12px"><button class="btn sm" data-fa="${r.id}">Annehmen</button><button class="btn sm s" data-fr="${r.id}">Ablehnen</button></div></div>`).join(''):''}
+ <h2>Freund hinzufügen</h2><div class="row" style="gap:8px;align-items:flex-start"><input id="fn" placeholder="@Gingo-Name" style="margin-bottom:0"><button class="btn sm" id="fa" style="padding:14px 18px">Anfrage</button></div>
+ <h2>Deine Freunde (${S.friends.length})</h2>${S.friends.length?S.friends.map((f,i)=>`<div class="card"><div ${row}>${av(f.n)}<div style="flex:1;min-width:0"><b>${esc(f.n)}</b> <span style="font-size:12px;color:var(--mu)">${esc(f.tag)}</span><div style="font-size:12px;color:var(--mu)">${esc(f.h[0]||'Noch keine Aktivität')}</div></div></div><div class="row" style="margin-top:12px;justify-content:flex-start"><button class="btn sm" data-s="${i}">Geld senden</button><button class="btn sm d" data-x="${i}">Entfernen</button></div></div>`).join(''):'<p>Noch keine Freunde. Schick eine Anfrage.</p>'}`;
+ $('#cp').onclick=()=>{try{navigator.clipboard.writeText(S.tag)}catch(e){}toast('Gingo-Name kopiert')};
+ $('#fa').onclick=async()=>{const k=key($('#fn').value.trim());if(!k)return;if(k===key(S.tag))return toast('Das bist du selbst');
+  try{const s=await getDoc(doc(db,'users',k));if(!s.exists())return toast('Niemand mit diesem Gingo-Namen gefunden');const u=s.data();
+   if(S.friends.some(f=>f.tag===u.tag))return toast('Das ist schon dein Freund');
+   delete S.done['fr'+uid+'_'+u.uid];
+   await setDoc(doc(db,'fr',uid+'_'+u.uid),{fromUid:uid,from:S.tag,fromName:S.name,toUid:u.uid,to:u.tag,toName:u.name,st:'pending'});
+   toast('Anfrage an '+u.name+' gesendet');$('#fn').value=''}catch(e){toast('Senden fehlgeschlagen')}};
+ v.querySelectorAll('[data-fa]').forEach(b=>b.onclick=async()=>{const r=inFr.find(x=>x.id===b.dataset.fa);try{await updateDoc(doc(db,'fr',r.id),{st:'ok'});if(!S.friends.some(f=>f.tag===r.from))S.friends.unshift({n:r.fromName,tag:r.from,uid:r.fromUid,h:['Freundschaft bestätigt']});save();rFriends(v)}catch(e){toast('Fehlgeschlagen')}});
+ v.querySelectorAll('[data-fr]').forEach(b=>b.onclick=async()=>{try{await updateDoc(doc(db,'fr',b.dataset.fr),{st:'no'});toast('Anfrage abgelehnt')}catch(e){toast('Fehlgeschlagen')}});
+ v.querySelectorAll('[data-ta]').forEach(b=>b.onclick=async()=>{try{await updateDoc(doc(db,'tx',b.dataset.ta),{st:'ok'});toast('Angenommen')}catch(e){toast('Fehlgeschlagen')}});
+ v.querySelectorAll('[data-tr]').forEach(b=>b.onclick=async()=>{try{await updateDoc(doc(db,'tx',b.dataset.tr),{st:'no'});toast('Abgelehnt – Geld geht zurück')}catch(e){toast('Fehlgeschlagen')}});
+ v.querySelectorAll('[data-x]').forEach(b=>b.onclick=()=>{S.friends.splice(b.dataset.x,1);save();rFriends(v)});
+ v.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{const f=S.friends[b.dataset.s];
+  ask('Geld senden','An '+f.n,(a,n)=>{if(a>S.bal)return toast('Nicht genug Guthaben');
+   confirmPay(f.n,a,false,async()=>{try{
+    await addDoc(collection(db,'tx'),{fromUid:uid,from:S.tag,fromName:S.name,toUid:f.uid,to:f.tag,toName:f.n,amt:a,note:n,st:'pending',t:Date.now()});
+    move(-a,'An '+f.n+(n?' · '+n:'')+' (wartet auf Annahme)','friend');f.h.unshift('Du hast '+eur(a)+' gesendet');save();toast('Anfrage an '+f.n+' gesendet');if(tab==='users')rFriends(v)}
+    catch(e){toast('Senden fehlgeschlagen')}})})});
+};
+
+rHome=function(v){oldHome(v);
+ const n=inTx.filter(t=>t.st==='pending').length+inFr.filter(r=>r.st==='pending').length,b=document.createElement('div');b.className='qa';
+ b.innerHTML=[['users','Geld senden'],['pay','Bezahlen'],['card','Karten']].map(([k,l])=>`<button data-g="${k}"><i>${ico(k,24)}${k==='users'&&n?`<em>${n}</em>`:''}</i>${l}</button>`).join('');
+ b.onclick=e=>{const x=e.target.closest('button');if(x){tab=x.dataset.g;render()}};
+ v.insertBefore(b,v.children[1]||null)};
+const st=document.createElement('style');st.textContent='.qa{display:flex;gap:26px;margin:6px 0 4px}.qa button{background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:7px;font-size:13px;color:var(--tx);cursor:pointer}.qa i{position:relative;width:54px;height:54px;border-radius:50%;background:var(--a);color:#1b1704;display:grid;place-items:center}.qa em{position:absolute;top:-4px;right:-4px;background:var(--no);color:#fff;font:700 11px/1 sans-serif;border-radius:9px;padding:3px 6px}';document.head.appendChild(st);
+setInterval(boot,1000);
 </script></body></html>
