@@ -1,1 +1,595 @@
+<!DOCTYPE html>
+<html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gingo Bank</title>
+<style>
+:root{--a:#E3B93C;--bg:#0E2B27;--bg2:#143832;--tx:#F3F1E7;--mu:#93ADA6;--ln:#24504A;--ok:#6FD39A;--no:#F08A7A;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:inherit}html,body{height:100%;margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+button,input,select{font:inherit;color:inherit}
+#app{max-width:480px;margin:0 auto;height:100%;display:flex;flex-direction:column;position:relative;overflow:hidden}
+#view{flex:1;overflow-y:auto;padding:20px 18px 24px}
+h1{font-size:26px;margin:0 0 4px;letter-spacing:-.5px}h2{font-size:17px;margin:22px 0 10px}p{margin:0 0 10px;color:var(--mu)}
+.btn{background:var(--a);color:#1b1704;border:0;border-radius:14px;padding:14px 18px;font-weight:700;width:100%;cursor:pointer}
+.btn.s{background:var(--bg2);color:var(--tx);border:1px solid var(--ln)}.btn.d{background:transparent;color:var(--no);border:1px solid var(--no)}.btn:disabled{opacity:.35}
+.btn.sm{width:auto;padding:8px 14px;font-size:14px;border-radius:10px}
+input,select{width:100%;background:var(--bg2);border:1px solid var(--ln);border-radius:12px;padding:12px 14px;margin:4px 0 12px}
+label{font-size:13px;color:var(--mu)}
+.card{background:var(--bg2);border:1px solid var(--ln);border-radius:18px;padding:16px;margin-bottom:12px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.bal{font-size:44px;font-weight:700;letter-spacing:-1.5px;margin:2px 0}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
+.tile{background:var(--bg2);border:1px solid var(--ln);border-radius:16px;padding:14px 4px;text-align:center;font-size:13px;cursor:pointer}
+.tile svg{display:block;margin:0 auto 6px}
+.tx{padding:12px 0;border-bottom:1px solid var(--ln)}.tx:last-child{border:0}
+.pos{color:var(--ok)}.neg{color:var(--tx)}
+nav{display:flex;border-top:1px solid var(--ln);background:var(--bg2);padding:6px 4px 8px}
+nav button{flex:1;background:none;border:0;color:var(--mu);font-size:12px;padding:6px 0;cursor:pointer}
+nav button.on{color:var(--a)}nav svg{display:block;margin:0 auto 2px}
+.ov{position:absolute;inset:0;background:var(--bg);z-index:20;display:flex;flex-direction:column;justify-content:center;padding:26px;overflow-y:auto}
+.sheet{position:absolute;inset:0;background:rgba(0,0,0,.6);z-index:30;display:flex;align-items:flex-end}
+.sheet>div{background:var(--bg2);width:100%;border-radius:24px 24px 0 0;padding:22px;border-top:1px solid var(--ln)}
+.toast{position:absolute;top:10px;left:14px;right:14px;z-index:50;background:var(--a);color:#1b1704;border-radius:14px;padding:12px 16px;font-weight:600;transform:translateY(-140%);transition:transform .35s}
+.toast.on{transform:none}
+.flip{perspective:900px;height:210px;margin-bottom:14px}.flip>div{position:relative;height:100%;transition:transform .7s;transform-style:preserve-3d;cursor:pointer}
+.flip.f>div{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;border-radius:20px;backface-visibility:hidden;padding:20px;display:flex;flex-direction:column;justify-content:space-between;background:linear-gradient(135deg,var(--a),#8a6d12);color:#1b1704}
+.face.b{transform:rotateY(180deg);padding:20px 0}
+.strip{background:#1b1704;height:40px}.sig{background:#f3f1e7;margin:0 20px;padding:8px 12px;border-radius:6px;text-align:right;font-weight:700;letter-spacing:2px}
+.lock .face{filter:grayscale(1) brightness(.6)}
+.check{width:120px;height:120px;margin:0 auto 18px;display:block}
+.check circle{fill:none;stroke:var(--ok);stroke-width:5;stroke-dasharray:340;stroke-dashoffset:340;animation:d .6s ease forwards}
+.check path{fill:none;stroke:var(--ok);stroke-width:7;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:80;stroke-dashoffset:80;animation:d .4s .5s ease forwards}
+@keyframes d{to{stroke-dashoffset:0}}
+.leaf{animation:sp 1.6s ease-out both}@keyframes sp{from{transform:rotate(-40deg) scale(.2);opacity:0}to{transform:none;opacity:1}}
+.logo{animation:fi 1s .7s both;font-size:34px;font-weight:700;letter-spacing:-1px}@keyframes fi{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.float{position:absolute;left:50%;top:150px;z-index:40;font-size:28px;font-weight:700;animation:fl 1.4s ease-out forwards;pointer-events:none}
+@keyframes fl{from{opacity:1;transform:translate(-50%,0)}to{opacity:0;transform:translate(-50%,-70px)}}
+.sw{display:flex;gap:10px;margin-bottom:12px}.sw i{width:34px;height:34px;border-radius:50%;cursor:pointer;border:2px solid transparent}
+.badge{font-size:12px;padding:3px 9px;border-radius:20px;background:var(--ln);color:var(--tx)}
+.help details{background:var(--bg2);border:1px solid var(--ln);border-radius:14px;padding:14px;margin-bottom:10px}.help summary{font-weight:600;cursor:pointer}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01s!important;transition-duration:.01s!important}}
+/* ===== Redesign: Aurora Glas ===== */
+:root{--bg:#F3F0FA;--bg2:rgba(255,255,255,.66);--tx:#1B1630;--mu:#6B6585;--ln:rgba(110,90,180,.16);--ok:#17935B;--no:#D9534A}
+html,body{background:#E9E4F6}
+#app{background:var(--bg)}
+#app::before{content:"";position:absolute;inset:-25%;z-index:0;pointer-events:none;background:radial-gradient(circle at 20% 15%,rgba(150,110,255,.45),transparent 40%),radial-gradient(circle at 85% 30%,var(--a),transparent 38%),radial-gradient(circle at 40% 85%,rgba(90,200,230,.45),transparent 42%);filter:blur(30px);opacity:.75;animation:aur 16s ease-in-out infinite alternate}
+@keyframes aur{to{transform:translate(6%,-5%) rotate(14deg) scale(1.15)}}
+#view{position:relative;z-index:1;padding:26px 18px 110px}
+nav[hidden]{display:none}
+nav{position:absolute;left:14px;right:14px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:10;border:1px solid rgba(255,255,255,.8);border-radius:30px;background:rgba(255,255,255,.7);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);box-shadow:0 14px 40px rgba(60,40,130,.22);padding:6px;gap:2px}
+nav button{border-radius:24px;padding:8px 0;color:var(--mu);transition:all .35s cubic-bezier(.3,1.5,.5,1)}
+nav button.on{background:var(--a);color:#1B1630;transform:translateY(-6px) scale(1.06);box-shadow:0 10px 22px -6px var(--a)}
+nav button:active{transform:scale(.9)}
+.card,.tile,input,select{backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+.card{border:1px solid rgba(255,255,255,.85);border-radius:26px;box-shadow:0 12px 34px rgba(80,55,160,.10);padding:18px}
+.tile{border:1px solid rgba(255,255,255,.85);border-radius:22px;box-shadow:0 8px 22px rgba(80,55,160,.09);transition:transform .3s cubic-bezier(.3,1.6,.5,1),box-shadow .3s;padding:16px 4px}
+.tile:hover{transform:translateY(-5px) scale(1.04)}.tile:active{transform:scale(.92)}
+.tile svg{color:var(--tx);stroke-width:1.6;transition:transform .4s}.tile:hover svg{transform:rotate(-8deg) scale(1.15)}
+input,select{border-radius:16px;border:1px solid rgba(255,255,255,.9);box-shadow:inset 0 2px 6px rgba(80,55,160,.08);transition:box-shadow .3s,transform .3s}
+input:focus,select:focus{outline:0;box-shadow:0 0 0 3px var(--a);transform:translateY(-1px)}
+.btn{position:relative;overflow:hidden;border-radius:18px;background:linear-gradient(135deg,var(--a),color-mix(in srgb,var(--a) 55%,#fff));box-shadow:0 12px 26px -8px var(--a);transition:transform .25s cubic-bezier(.3,1.6,.5,1),box-shadow .3s;color:#1B1630}
+.btn:hover{transform:translateY(-2px)}.btn:active{transform:scale(.96)}
+.btn.s{background:rgba(255,255,255,.75);box-shadow:0 6px 16px rgba(80,55,160,.10);color:var(--tx);border:1px solid #fff}.btn.d{background:rgba(255,255,255,.5);box-shadow:none}
+.rip{position:absolute;border-radius:50%;background:rgba(255,255,255,.65);transform:scale(0);animation:rip .7s ease-out forwards;pointer-events:none}@keyframes rip{to{transform:scale(3.4);opacity:0}}
+.bal{font-size:54px;font-weight:800;letter-spacing:-2.5px;background:linear-gradient(100deg,var(--tx) 30%,#7A4FD6 55%,var(--tx) 80%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:sh 5s linear infinite}
+@keyframes sh{to{background-position:-250% 0}}
+#view>*{animation:up .7s cubic-bezier(.2,.9,.25,1) both}
+#view>*:nth-child(2){animation-delay:.06s}#view>*:nth-child(3){animation-delay:.12s}#view>*:nth-child(4){animation-delay:.18s}#view>*:nth-child(5){animation-delay:.24s}#view>*:nth-child(6){animation-delay:.3s}#view>*:nth-child(7){animation-delay:.36s}#view>*:nth-child(n+8){animation-delay:.42s}
+@keyframes up{from{opacity:0;transform:translateY(26px) scale(.97);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
+.tx{animation:up .6s both}.tx:nth-child(2){animation-delay:.1s}.tx:nth-child(3){animation-delay:.18s}.tx:nth-child(4){animation-delay:.26s}.tx:nth-child(n+5){animation-delay:.34s}
+.tx{border-color:var(--ln)}
+.face{background:radial-gradient(circle at 88% 8%,var(--a),transparent 46%),linear-gradient(135deg,#1B1630,#3B2A8C 70%,#5B3FC4);color:#fff;box-shadow:0 24px 50px -14px rgba(59,42,140,.7);overflow:hidden}
+.face::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.28) 50%,transparent 65%);transform:translateX(-120%);animation:gl 4s ease-in-out infinite}
+@keyframes gl{55%,100%{transform:translateX(120%)}}
+.flip>div{transition:transform .9s cubic-bezier(.3,1.3,.4,1)}
+.flip:not(.f):not(.lock){animation:fl2 5s ease-in-out infinite}@keyframes fl2{50%{transform:translateY(-6px) rotate(-.6deg)}}
+.ov{background:rgba(243,240,250,.88);backdrop-filter:blur(26px);-webkit-backdrop-filter:blur(26px)}
+.sheet{background:rgba(27,22,48,.45);backdrop-filter:blur(6px)}
+.sheet>div{background:#fff;border:0;border-radius:32px 32px 0 0;animation:sl .5s cubic-bezier(.2,.9,.25,1) both;box-shadow:0 -20px 50px rgba(40,20,100,.25)}
+@keyframes sl{from{transform:translateY(100%)}}
+.toast{background:#1B1630;color:#fff;border-radius:22px;box-shadow:0 16px 40px rgba(30,15,80,.4);transition:transform .55s cubic-bezier(.3,1.5,.5,1)}
+.leaf{filter:drop-shadow(0 0 22px var(--a));animation:sp 1.6s cubic-bezier(.2,1.3,.4,1) both,gw 2.6s 1.6s ease-in-out infinite alternate}
+@keyframes gw{to{filter:drop-shadow(0 0 40px var(--a));transform:scale(1.07)}}
+.logo{background:linear-gradient(100deg,var(--tx) 30%,var(--a) 50%,var(--tx) 70%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:fi 1s .7s both,sh 3s 1.5s linear infinite}
+.check circle{stroke:var(--ok)}
+.float{color:var(--ok);text-shadow:0 4px 18px rgba(23,147,91,.4)}
+#view .card svg{animation:pu 2.2s ease-in-out infinite;filter:drop-shadow(0 0 14px var(--a))}@keyframes pu{50%{transform:scale(1.12)}}
+.sw i{transition:transform .3s cubic-bezier(.3,1.7,.5,1);box-shadow:0 6px 14px rgba(0,0,0,.18)}.sw i:hover{transform:scale(1.2)}
+.badge{background:var(--a);color:#1B1630;font-weight:600}
+.help details{border-radius:20px;border:1px solid #fff;backdrop-filter:blur(18px);transition:box-shadow .3s}.help details[open]{box-shadow:0 12px 30px rgba(80,55,160,.14)}
+.pt{position:absolute;left:50%;top:42%;width:10px;height:10px;border-radius:50%;z-index:45;pointer-events:none;animation:pt 1.2s ease-out forwards}
+@keyframes pt{from{transform:translate(-50%,-50%) scale(1)}to{transform:translate(calc(-50% + var(--x)),calc(-50% + var(--y))) scale(.2);opacity:0}}
+/* ===== v3: PIN, Login, Benachrichtigung, Desktop ===== */
+.sheet>div{position:relative}
+.dots{display:flex;gap:18px;justify-content:center;margin:22px 0 26px}
+.dot{width:15px;height:15px;border-radius:50%;border:2px solid var(--tx);transition:background .15s,border-color .15s}
+.dot.on{background:var(--tx);animation:pop .3s cubic-bezier(.3,1.8,.5,1)}@keyframes pop{50%{transform:scale(1.6)}}
+.dots.bad .dot{border-color:var(--no);background:var(--no)}
+.shake{animation:shk .5s}@keyframes shk{20%,60%{transform:translateX(-12px)}40%,80%{transform:translateX(12px)}}
+.kp{display:grid;grid-template-columns:repeat(3,auto);gap:14px;justify-content:center}
+.k{width:min(19vw,11vh,78px);height:min(19vw,11vh,78px);border-radius:50%;border:1px solid rgba(255,255,255,.9);background:rgba(255,255,255,.6);backdrop-filter:blur(14px);box-shadow:0 8px 20px rgba(80,55,160,.12);font-size:28px;font-weight:500;cursor:pointer;display:grid;place-items:center;color:var(--tx);transition:transform .2s cubic-bezier(.3,1.7,.5,1),background .2s;animation:kin .5s both;padding:0}
+.kp>:nth-child(-n+3){animation-delay:.15s}.kp>:nth-child(n+4):nth-child(-n+6){animation-delay:.22s}.kp>:nth-child(n+7):nth-child(-n+9){animation-delay:.29s}.kp>:nth-child(n+10){animation-delay:.36s}
+@keyframes kin{from{opacity:0;transform:scale(.4)}}
+.k:active{transform:scale(.86);background:var(--a)}.k.g{background:transparent;box-shadow:none;border-color:transparent;backdrop-filter:none}
+.lk{align-items:center;text-align:center}.lk>*{animation:up .7s both}
+.lg{width:84px;height:84px;border-radius:50%;margin:0 auto 14px;display:grid;place-items:center;font-size:30px;font-weight:700;color:#1B1630;background:linear-gradient(135deg,var(--a),#fff);box-shadow:0 0 0 6px rgba(255,255,255,.6),0 14px 34px -6px var(--a);animation:up .7s both,br 3s 1s ease-in-out infinite}
+@keyframes br{50%{box-shadow:0 0 0 14px rgba(255,255,255,.25),0 14px 44px -6px var(--a)}}
+#view .ov.unl{pointer-events:none;animation:unl .7s cubic-bezier(.5,0,.8,.4) forwards}@keyframes unl{to{opacity:0;transform:scale(1.25);filter:blur(14px)}}
+.scanl{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(255,255,255,.85);backdrop-filter:blur(18px);border-radius:inherit;animation:rf .3s both;color:var(--tx)}
+.scanl .ln{stroke:var(--a);stroke-width:3;animation:scn 1.2s ease-in-out infinite}@keyframes scn{0%,100%{transform:translateY(-26px)}50%{transform:translateY(26px)}}
+.scanl .fc{stroke-dasharray:80;stroke-dashoffset:80;animation:d 1s .1s forwards}
+.scanl.okd .ln{display:none}.scanl.okd svg{animation:pu .4s}@keyframes rf{from{opacity:0}}
+.res{background:rgba(255,255,255,.3)!important;backdrop-filter:blur(22px) saturate(1.5);animation:rf .35s both;transition:opacity .5s}.res.gone{opacity:0}
+.rs{width:120px;height:120px;margin:0 auto 18px;display:block;animation:zin .6s cubic-bezier(.3,1.6,.5,1) both}@keyframes zin{from{transform:scale(.4);opacity:0}}
+.rs circle{fill:rgba(255,255,255,.4);stroke:rgba(27,22,48,.7);stroke-width:3;stroke-dasharray:340;stroke-dashoffset:340;animation:d .7s ease forwards}
+.rs path{fill:none;stroke:rgba(27,22,48,.85);stroke-width:5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:90;stroke-dashoffset:90;animation:d .45s .55s ease forwards}
+.res.bad .rs circle,.res.bad .rs path{stroke:rgba(217,83,74,.9)}
+.check circle{stroke:rgba(27,22,48,.7);fill:rgba(255,255,255,.4);stroke-width:3}.check path{stroke:rgba(27,22,48,.85);stroke-width:5}
+.notif{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));left:12px;right:12px;max-width:420px;margin:0 auto;z-index:70;display:flex;gap:12px;align-items:center;padding:14px 16px;border-radius:26px;background:rgba(255,255,255,.78);backdrop-filter:blur(26px) saturate(1.6);border:1px solid #fff;box-shadow:0 22px 50px rgba(40,20,100,.28);overflow:hidden;animation:nd .7s cubic-bezier(.2,1.4,.4,1) both;cursor:pointer}
+.notif.out{transition:transform .5s,opacity .5s;transform:translateY(-160%);opacity:0}@keyframes nd{from{transform:translateY(-170%) scale(.9)}}
+.ni{width:46px;height:46px;border-radius:14px;flex:none;display:grid;place-items:center;background:linear-gradient(135deg,var(--a),#fff);position:relative}
+.ni::after{content:"";position:absolute;inset:0;border-radius:14px;border:2px solid var(--a);animation:ping 1.6s ease-out infinite}@keyframes ping{to{transform:scale(1.7);opacity:0}}
+.nt{flex:1;min-width:0}.nt .row{font-size:12px;color:var(--mu)}.nh{font-weight:700}.nb b{font-size:19px;color:var(--ok);letter-spacing:-.5px}
+.np{position:absolute;left:0;bottom:0;height:3px;background:var(--a);animation:npb 4.2s linear forwards}@keyframes npb{from{width:100%}to{width:0}}
+@media(min-width:600px){#app{max-width:620px}}
+@media(min-width:900px){
+html,body{overflow:hidden}
+#app{max-width:1180px;height:calc(100% - 48px);margin:24px auto;border-radius:36px;border:1px solid #fff;box-shadow:0 40px 100px rgba(60,40,130,.28)}
+nav{left:18px;top:18px;bottom:18px;right:auto;width:210px;flex-direction:column;justify-content:flex-start;gap:6px;padding:14px}
+nav button{display:flex;align-items:center;gap:12px;font-size:15px;padding:14px 16px;text-align:left;border-radius:18px}nav button svg{margin:0}nav button.on{transform:translateX(6px)}
+#view{padding:36px 40px 40px 270px}#view>*{max-width:760px;margin-left:auto;margin-right:auto}
+.sheet{align-items:center;justify-content:center}.sheet>div{max-width:420px;border-radius:32px}
+.notif{left:auto;right:24px;width:380px;margin:0}
+.bal{font-size:64px}.tiles{gap:16px}
+}
+/* ===== v4: Layout, Karte, Freunde, Geldeingang ===== */
+html,body{background:radial-gradient(circle at 15% 10%,rgba(150,110,255,.5),transparent 40%),radial-gradient(circle at 90% 80%,rgba(90,200,230,.5),transparent 40%),#E9E4F6}
+@media(max-width:699px){#app{max-width:none;height:100dvh;border-radius:0}.tile{font-size:12px;padding:14px 2px}.tiles{gap:8px}.bal{font-size:clamp(38px,12vw,54px)}}
+@media(min-width:700px){#app{max-width:820px;height:calc(100dvh - 40px);margin:20px auto;border-radius:36px;border:1px solid #fff;box-shadow:0 40px 100px rgba(60,40,130,.28)}}
+@media(min-width:700px) and (max-width:899px){nav{left:50%;right:auto;width:min(520px,calc(100% - 28px));transform:translateX(-50%)}#view>*{max-width:640px;margin-left:auto;margin-right:auto}}
+@media(min-width:900px){nav{left:50%;right:auto;top:auto;bottom:18px;width:min(520px,calc(100% - 28px));transform:translateX(-50%);flex-direction:row;padding:6px;gap:2px}nav button{display:block;font-size:12px;padding:8px 0;text-align:center}nav button svg{margin:0 auto 2px}nav button.on{transform:translateY(-6px) scale(1.06)}#view{padding:30px 18px 120px}#view>*{max-width:680px}.tiles{gap:12px}.bal{font-size:60px}}
+.chip{width:42px;height:30px;border-radius:7px;background:linear-gradient(135deg,#f4e3a0,#b8923a)}
+.av{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-weight:700;color:#1B1630;flex:none}
+.np{animation-duration:5s}
+.coin{position:absolute;top:-40px;z-index:55;border-radius:50%;width:var(--s);height:var(--s);background:radial-gradient(circle at 30% 30%,#fff3b0,#E3B93C 55%,#a97f10);box-shadow:inset 0 0 0 3px rgba(255,255,255,.35),0 4px 10px rgba(0,0,0,.2);animation:cn 2s linear both;pointer-events:none}@keyframes cn{to{transform:translateY(110vh) rotate(var(--r))}}
+#app.glow::after{content:"";position:absolute;inset:0;z-index:54;pointer-events:none;border-radius:inherit;box-shadow:inset 0 0 70px 6px var(--a);animation:gl2 1.4s ease-out forwards}@keyframes gl2{from{opacity:1}to{opacity:0}}
+.wave{position:absolute;left:50%;top:90px;width:20px;height:20px;margin:-10px;border-radius:50%;border:3px solid var(--a);z-index:54;pointer-events:none;animation:wv 1.2s ease-out forwards}@keyframes wv{to{transform:scale(40);opacity:0}}
+.bump{animation:bm .7s cubic-bezier(.3,1.8,.5,1)!important}@keyframes bm{40%{transform:scale(1.12)}}
+/* ===== v5: Tempo ===== */
+*{-webkit-tap-highlight-color:transparent}button,.tile,.k{touch-action:manipulation}
+#view{overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+#app::before{animation:none;filter:none;opacity:.5;inset:0}
+.card,.tile,input,select,nav,.k,.notif,.ov,.sheet,.scanl,.res,.help details,.sheet>div{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+.card,.tile{background:rgba(255,255,255,.84);box-shadow:0 4px 14px rgba(80,55,160,.08)}nav{background:rgba(255,255,255,.95)}.k{background:rgba(255,255,255,.92);box-shadow:0 3px 10px rgba(80,55,160,.1)}.k.g{background:transparent;box-shadow:none}.notif{background:rgba(255,255,255,.98)}.ov{background:rgba(243,240,250,.97)}.scanl{background:rgba(255,255,255,.97)}.res{background:rgba(255,255,255,.9)!important}.sheet{background:rgba(27,22,48,.4)}input,select{background:#fff}
+@keyframes up{from{opacity:0;transform:translateY(10px)}}
+@keyframes sp{from{transform:scale(.4);opacity:0}to{transform:none;opacity:1}}
+#view>*{animation-duration:.25s!important;animation-delay:0s!important}.tx{animation:none}.lk>*{animation-duration:.3s!important;animation-delay:0s!important}
+.bal{animation:none!important;background:none;-webkit-background-clip:border-box;background-clip:border-box;color:var(--tx)}
+.flip:not(.f):not(.lock){animation:none}.flip>div{transition-duration:.5s}#view .card svg{animation:none;filter:none}.lg{animation:up .3s both!important}
+.leaf{animation:sp .6s cubic-bezier(.2,1.3,.4,1) both!important;filter:none!important}
+.logo{animation:fi .4s .2s both!important;background:none;-webkit-background-clip:border-box;background-clip:border-box;color:var(--tx)}
+nav button,.btn,.tile{transition-duration:.15s}.sheet>div{animation-duration:.28s}.toast{transition-duration:.28s}.notif{animation-duration:.4s}.notif.out{transition-duration:.3s}.np{animation-duration:3.5s}.float{animation-duration:.9s}
+.rs{animation-duration:.35s}.rs circle{animation-duration:.4s}.rs path{animation-duration:.25s;animation-delay:.3s}.check circle{animation-duration:.4s}.check path{animation-duration:.3s;animation-delay:.3s}
+.coin,.sw i{box-shadow:none}#app.glow::after{animation-duration:.9s}#view .ov.unl{animation-duration:.35s}
+.ni{background:none}.ni svg{width:46px;height:46px}
+.chipf{display:flex;gap:8px;margin-bottom:8px}.chipf button{flex:1;border:1px solid var(--ln);background:#fff;border-radius:14px;padding:8px;cursor:pointer}.chipf button.on{background:var(--a);color:#1B1630;font-weight:700}
+.q{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--ln)}.q:last-child{border:0}.q>b{flex:1;min-width:0}
+.ib{width:34px;height:34px;border-radius:10px;border:1px solid var(--ln);background:#fff;cursor:pointer;display:grid;place-items:center;padding:0;color:var(--tx)}
+/* ===== v6: Tablet ===== */
+@media(min-width:700px){
+#app{max-width:none;width:100%;height:100dvh;margin:0;border-radius:0;border:0;box-shadow:none}
+body{font-size:18px}
+#view{padding:34px 40px 150px}
+#view>*{max-width:640px;margin-left:auto;margin-right:auto}
+#view>.ov{max-width:none;margin:0}
+#view>.cw{max-width:1100px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 32px;align-items:start}
+.cc{min-width:0}
+.ov{padding-left:max(26px,calc((100% - 460px)/2));padding-right:max(26px,calc((100% - 460px)/2))}
+nav{left:50%;right:auto;top:auto;bottom:22px;width:min(640px,calc(100% - 48px));transform:translateX(-50%);flex-direction:row}
+nav button{display:block;font-size:13px;padding:10px 0;text-align:center}nav button svg{margin:0 auto 3px}nav button.on{transform:translateY(-6px) scale(1.06)}
+.btn{padding:16px 22px}.btn.sm{padding:10px 16px}.tile{font-size:14px;padding:20px 4px}.card{padding:22px}.bal{font-size:64px}h1{font-size:32px}h2{font-size:19px}.k{width:88px;height:88px;font-size:32px}
+.sheet{align-items:center;justify-content:center}.sheet>div{max-width:460px;border-radius:32px;max-height:94dvh;overflow-y:auto}
+.notif{left:auto;right:24px;width:400px;margin:0}
+}
+@media(min-width:700px) and (max-height:820px){.k{width:72px;height:72px;font-size:28px}.dots{margin:14px 0 18px}}
+/* ===== v7: normal ===== */
+:root{--bg:#F4F5F7;--bg2:#fff;--tx:#14161A;--mu:#6B7280;--ln:#E5E7EB;--ok:#15803D;--no:#DC2626}
+html,body,#app{background:#F4F5F7}#app::before{display:none}
+.ov{background:#F4F5F7}
+.card,.tile{background:#fff;border:1px solid var(--ln);border-radius:16px;box-shadow:none}
+.tile:hover,.tile:hover svg,.btn:hover{transform:none}
+input,select{background:#fff;border:1px solid #D1D5DB;border-radius:12px;box-shadow:none}input:focus,select:focus{box-shadow:0 0 0 2px var(--a);transform:none}
+.btn{background:var(--a);box-shadow:none;border-radius:12px;color:#14161A}.btn.s{background:#fff;border:1px solid #D1D5DB;color:var(--tx)}.btn.d{background:#fff;color:var(--no);border:1px solid var(--no)}
+nav{position:static;left:auto;right:auto;top:auto;bottom:auto;transform:none;width:auto;border:0;border-top:1px solid var(--ln);border-radius:0;box-shadow:none;background:#fff;padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px));flex:none}
+nav button{position:relative;border-radius:10px;padding:8px 0;transition:none}
+nav button.on{background:none;color:var(--tx);transform:none;box-shadow:none;font-weight:700}
+nav button.on::before{content:"";position:absolute;top:-6px;left:28%;right:28%;height:3px;border-radius:0 0 3px 3px;background:var(--a)}
+#view{padding:20px 16px 24px}h1{font-size:26px}.bal{font-size:clamp(34px,10vw,44px);letter-spacing:-1px}
+.flip{height:auto;aspect-ratio:1.586;width:100%;max-width:360px;margin:0 auto 14px}.face{padding:18px}
+.sheet{align-items:center;justify-content:center;background:rgba(20,22,26,.45);padding:16px}
+.sheet>div{width:100%;max-width:380px;border-radius:20px;padding:20px;max-height:92dvh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25);animation:pp .2s ease both}@keyframes pp{from{opacity:0;transform:scale(.96)}}
+.k{width:64px;height:64px;font-size:24px;box-shadow:none;background:#F3F4F6;border:0}.k.g{background:transparent}.k:active{background:var(--a)}.kp{gap:10px}.dots{margin:14px 0 18px}
+.lk .k{width:76px;height:76px;font-size:28px}
+.ov.res{position:absolute;inset:auto!important;left:50%;top:50%;margin:0;transform:translate(-50%,-50%);width:min(320px,calc(100% - 32px));height:auto;padding:28px 20px!important;border-radius:20px;background:#fff!important;box-shadow:0 20px 60px rgba(0,0,0,.28);animation:rf .2s both}
+.notif{border-radius:16px;box-shadow:0 8px 28px rgba(0,0,0,.18);border:1px solid var(--ln)}
+@media(min-width:700px){#view{padding:28px 32px 32px}.bal{font-size:48px}h1{font-size:28px}}
+/* ===== v8: Nacht ===== */
+:root{--bg:#0B1220;--sf:#131C2E;--in:#0F1829;--k:#1B2740;--bg2:#131C2E;--tx:#EAF0FA;--mu:#8EA0BD;--ln:#22304A;--ok:#4ADE80;--no:#F87171;color-scheme:dark}
+html.light{--bg:#F4F5F7;--sf:#fff;--in:#fff;--k:#F3F4F6;--bg2:#fff;--tx:#14161A;--mu:#6B7280;--ln:#E5E7EB;--ok:#15803D;--no:#DC2626;color-scheme:light}
+html,body,#app,.ov{background:var(--bg)}
+.card,.tile,nav,.sheet>div,.notif,.scanl,.ib,.chipf button,.help details{background:var(--sf);border-color:var(--ln)}
+.ov.res{background:var(--sf)!important}
+input,select{background:var(--in);border-color:var(--ln);color:var(--tx)}::placeholder{color:var(--mu)}
+.btn.s,.btn.d{background:var(--sf)}.btn.s{border-color:var(--ln)}
+.k{background:var(--k)}.k.g{background:transparent}.k:active{background:var(--a);color:#14161A}
+.hero{background:linear-gradient(135deg,var(--a),color-mix(in srgb,var(--a) 45%,#000));color:#14161A;border-radius:22px;padding:20px;margin:14px 0}.hero .bal{color:#14161A;margin:2px 0}
+.rs circle,.check circle{stroke:var(--tx);fill:rgba(128,128,128,.12)}.rs path,.check path{stroke:var(--tx)}.res.bad .rs circle,.res.bad .rs path{stroke:var(--no)}
+.toast.bad{background:var(--no);color:#fff;animation:shk .45s}
+.err{animation:shk .45s;border-color:var(--no)!important;box-shadow:0 0 0 2px var(--no)!important}
+.res.bad .rs{animation:zin .35s both,shk .5s .35s}
+.tiles .tile{animation:up .35s both}.tiles .tile:nth-child(2){animation-delay:.05s}.tiles .tile:nth-child(3){animation-delay:.1s}.tiles .tile:nth-child(4){animation-delay:.15s}
+.s-tile{animation:stile .7s cubic-bezier(.2,1.3,.4,1) both}@keyframes stile{from{transform:scale(.3) rotate(-20deg);opacity:0}}
+.lp{stroke-dasharray:200;stroke-dashoffset:200;animation:d .8s .35s ease forwards}.ld{transform-box:fill-box;transform-origin:center;animation:dotp .4s 1s cubic-bezier(.3,1.8,.5,1) both}@keyframes dotp{from{transform:scale(0)}}
+.sl span{display:inline-block;opacity:0;animation:up .4s both;animation-delay:calc(.9s + var(--i)*50ms)}.sg{opacity:0;animation:up .4s 1.25s both}
+.sbar{width:140px;height:3px;background:var(--ln);border-radius:3px;overflow:hidden;margin:22px auto 0}.sbar i{display:block;height:100%;background:var(--a);transform:translateX(-100%);animation:sb 1.2s .4s ease forwards}@keyframes sb{to{transform:none}}
+#view .ov.sp-out{animation:unl .3s forwards}
+/* ===== v9: Start ===== */
+@keyframes up2{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.sp2{overflow:hidden;align-items:center;justify-content:center;text-align:center;background:radial-gradient(circle at 50% 42%,color-mix(in srgb,var(--a) 22%,var(--bg)),var(--bg) 62%)}
+.lw{position:relative;width:140px;height:140px;display:grid;place-items:center}
+.rg i{position:absolute;inset:0;border:1px solid var(--a);border-radius:50%;opacity:0;animation:rp 1.4s ease-out infinite}@keyframes rp{from{opacity:.5;transform:scale(.8)}to{opacity:0;transform:scale(3)}}
+.pr{position:absolute;inset:0;transform:rotate(-90deg)}.pr circle{fill:none;stroke:var(--a);stroke-width:3;stroke-linecap:round;stroke-dasharray:402;stroke-dashoffset:402;animation:d .9s .15s cubic-bezier(.5,0,.2,1) forwards}
+.lt{animation:lz .6s .3s cubic-bezier(.2,1.5,.4,1) both}@keyframes lz{from{transform:scale(.2);opacity:0}}
+.lw::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:2px solid var(--a);opacity:0;animation:sh2 .6s 1s ease-out forwards}@keyframes sh2{from{opacity:.9;transform:scale(.9)}to{opacity:0;transform:scale(1.9)}}
+.wm{margin-top:22px;font-size:34px;font-weight:800;letter-spacing:-.5px;line-height:1.3;overflow:hidden;display:flex;gap:.3em;justify-content:center}
+.wm span{display:block;transform:translateY(115%);animation:wu .5s cubic-bezier(.2,.9,.3,1) forwards}.wm span:nth-child(1){animation-delay:.95s}.wm span:nth-child(2){animation-delay:1.05s;color:var(--a)}@keyframes wu{to{transform:none}}
+.sg{opacity:0;animation:up2 .4s 1.3s both}
+#view .ov.sp-out{animation:zt .26s ease-in forwards}@keyframes zt{to{opacity:0;transform:scale(1.3)}}
+</style></head><body><div id="app"><div class="toast" id="toast"></div><div id="view"></div><nav id="nav" hidden></nav></div>
+<script>
+const $=s=>document.querySelector(s),eur=n=>n.toLocaleString('de-DE',{style:'currency',currency:'EUR'});
+let S,tab='home',sessionOk=false,shown=0;
+const load=()=>{try{S=JSON.parse(localStorage.getItem('gingo'))}catch(e){S=null}};
+const save=()=>{try{localStorage.setItem('gingo',JSON.stringify(S))}catch(e){}};
+load();
+const THEMES={Ginkgo:'#E3B93C',Minze:'#6FD39A',Himmel:'#7DB8F0',Koralle:'#F08A7A',Flieder:'#B9A2F0'};
+const IC={home:'M3 11l9-8 9 8v10h-6v-6H9v6H3z',card:'M2 6h20v12H2zM2 10h20',pay:'M5 12a7 7 0 0 1 14 0M8 12a4 4 0 0 1 8 0M12 12v.1',users:'M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM3 20c0-4 3-6 6-6s6 2 6 6M17 8a3 3 0 0 1 0 6M21 20c0-3-1-5-3-6',set:'M4 6h16M4 12h16M4 18h16M9 4v4M15 10v4M8 16v4'};
+const ico=(k,s=22)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="${IC[k]}"/></svg>`;
+const LEAF='<svg class="leaf" width="110" height="110" viewBox="0 0 100 100"><path d="M50 90V50M50 50C20 50 8 28 14 12c14 2 30 6 36 38 6-32 22-36 36-38 6 16-6 38-36 38z" fill="none" stroke="#E3B93C" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+function snd(t){try{const c=new (window.AudioContext||window.webkitAudioContext)(),n=t==='pay'?[[880,0],[1318,.12],[1760,.24]]:t==='in'?[[660,0],[990,.1]]:[[440,0]];n.forEach(([f,d])=>{const o=c.createOscillator(),g=c.createGain();o.frequency.value=f;o.type='sine';g.gain.setValueAtTime(.0001,c.currentTime+d);g.gain.exponentialRampToValueAtTime(.25,c.currentTime+d+.02);g.gain.exponentialRampToValueAtTime(.0001,c.currentTime+d+.3);o.connect(g);g.connect(c.destination);o.start(c.currentTime+d);o.stop(c.currentTime+d+.35)})}catch(e){}}
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2800)}
+function applyTheme(){document.documentElement.style.setProperty('--a',S&&S.theme||'#E3B93C')}
+function move(amt,label,kind){S.bal=Math.round((S.bal+amt)*100)/100;S.txs.unshift({t:Date.now(),l:label,a:amt,k:kind||''});S.txs=S.txs.slice(0,60);save();
+ const f=document.createElement('div');f.className='float '+(amt>0?'pos':'');f.textContent=(amt>0?'+':'-')+eur(Math.abs(amt));$('#app').appendChild(f);setTimeout(()=>f.remove(),1500);if(amt>0)snd('in');
+ if(amt>0){notif(label,amt);cash(amt)}else if(kind==='sub')notif(label,amt);if(tab==='home')render()}
+function countTo(el,from,to){const t0=performance.now();(function f(t){const p=Math.min(1,(t-t0)/450);el.textContent=eur(from+(to-from)*p);if(p<1)requestAnimationFrame(f)})(t0)}
+const fmtD=t=>new Date(t).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+function iban(){let s='DE';for(let i=0;i<20;i++)s+=Math.floor(Math.random()*10);return s}
+const fi=s=>s.replace(/(.{4})/g,'$1 ').trim();
 
+/* ---------- Start flow ---------- */
+function disclaimer(){
+ $('#nav').hidden=true;
+ $('#view').innerHTML=`<div class="ov"><h1>Wichtiger Hinweis</h1><p>Bitte lies diese Bedingungen, bevor du Gingo Bank nutzt.</p>
+ <div class="card"><p style="color:var(--tx)">Gingo Bank ist keine echte Banking-App. Es gibt kein echtes Konto, kein echtes Geld und keine Verbindung zu einer Bank. Die App dient nur zum Spaß.</p>
+ <p style="color:var(--tx)">Du darfst damit niemanden täuschen oder betrügen. Wenn jemand die App dafür missbraucht, übernimmt der Entwickler dafür keine Haftung.</p></div>
+ <label class="row" style="justify-content:flex-start;gap:12px;color:var(--tx);margin-bottom:18px"><input type="checkbox" id="ck" style="width:22px;margin:0"> Ich habe die Bedingungen gelesen und akzeptiere sie.</label>
+ <button class="btn" id="go" disabled>Bestätigen und weiter</button></div>`;
+ $('#ck').onchange=e=>$('#go').disabled=!e.target.checked;
+ $('#go').onclick=()=>{sessionOk=true;splash()}}
+function splash(){
+ $('#view').innerHTML=`<div class="ov" style="align-items:center;text-align:center">${LEAF}<div class="logo">Gingo Bank</div><p style="margin-top:6px;animation:fi 1s 1.2s both">Dein Konto. Deine Regeln.</p></div>`;
+ setTimeout(()=>S&&S.setup?(S.pin?lock():main()):setup(),2800)}
+function setup(){
+ $('#view').innerHTML=`<div class="ov"><h1>Konto einrichten</h1><p>Wähle deine Daten. Alles bleibt auf diesem Gerät.</p>
+ <label>Name</label><input id="n" placeholder="Vor- und Nachname">
+ <label>Wunsch-IBAN (leer lassen für automatische IBAN)</label><input id="i" placeholder="DE00 0000 0000 0000 0000 00">
+ <label>Startguthaben in Euro</label><input id="b" type="number" value="1000" min="0">
+ <label>Zahlungs-PIN (4 Ziffern)</label><input id="pw" type="password" inputmode="numeric" maxlength="4" placeholder="4 Ziffern">
+ <label>App-PIN (4 Ziffern, optional)</label><input id="ap" type="password" inputmode="numeric" maxlength="4" placeholder="leer lassen für keine">
+ <p style="font-size:13px"><a href="#" id="nopw" style="color:var(--a)">Ich möchte kein App-Passwort</a></p>
+ <button class="btn" id="ok">Konto erstellen</button></div>`;
+ $('#nopw').onclick=e=>{e.preventDefault();$('#ap').value='';toast('Kein App-Passwort gesetzt')};
+ $('#ok').onclick=()=>{const n=$('#n').value.trim(),pw=$('#pw').value;if(!n)return toast('Bitte gib einen Namen ein');if(!/^\d{4}$/.test(pw))return toast('Die Zahlungs-PIN besteht aus 4 Ziffern');if($('#ap').value&&!/^\d{4}$/.test($('#ap').value))return toast('Die App-PIN besteht aus 4 Ziffern');
+  let ib=$('#i').value.replace(/\s/g,'').toUpperCase();if(ib&&!/^[A-Z]{2}\d{2}[A-Z0-9]{10,30}$/.test(ib))return toast('Diese IBAN ist ungültig');
+  S={setup:1,name:n,iban:ib||iban(),bal:0,txs:[],bills:[],subs:[],friends:[],reqs:[],theme:'#E3B93C',pin:$('#ap').value,payPw:pw,scam:false,
+   card:{name:n.toUpperCase(),num:'5'+Array.from({length:15},()=>Math.floor(Math.random()*10)).join(''),exp:'11/30',cvc:String(100+Math.floor(Math.random()*900)),locked:false},
+   nfc:{store:'',amt:0,mode:'once',left:0},gen:{on:false,amt:100,sec:10}};
+  S.bal=Math.max(0,+$('#b').value||0);S.txs.push({t:Date.now(),l:'Startguthaben',a:S.bal,k:''});save();applyTheme();main()}}
+function lock(){
+ $('#view').innerHTML=`<div class="ov"><h1>Willkommen zurück</h1><p>Gib dein App-Passwort ein.</p><input id="p" type="password" placeholder="App-Passwort"><button class="btn" id="ok">Entsperren</button></div>`;
+ $('#ok').onclick=()=>$('#p').value===S.pin?main():toast('Falsches Passwort')}
+
+/* ---------- Main ---------- */
+function main(){applyTheme();const n=$('#nav');n.hidden=false;
+ n.innerHTML=[['home','Start'],['card','Karte'],['pay','Bezahlen'],['users','Freunde'],['set','Mehr']].map(([k,l])=>`<button data-t="${k}">${ico(k)}${l}</button>`).join('');
+ n.onclick=e=>{const b=e.target.closest('button');if(b){tab=b.dataset.t;render()}};render()}
+function render(){document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));const v=$('#view');v.scrollTop=0;
+ ({home:rHome,card:rCard,pay:rPay,users:rFriends,set:rSet})[tab](v)}
+function txList(a){return a.length?a.map(t=>`<div class="tx row"><div><div>${t.l}</div><div style="font-size:12px;color:var(--mu)">${fmtD(t.t)}</div></div><b class="${t.a>0?'pos':'neg'}">${t.a>0?'+':'-'}${eur(Math.abs(t.a))}</b></div>`).join(''):'<p>Noch keine Umsätze.</p>'}
+function rHome(v){
+ const open=S.bills.filter(b=>!b.paid),subsum=S.subs.reduce((s,x)=>s+x.rate,0);
+ v.innerHTML=`<p style="margin:0">Hallo ${S.name.split(' ')[0]}</p><div style="font-size:13px;color:var(--mu)">Girokonto</div><div class="bal" id="bal">${eur(shown)}</div><div style="font-size:13px;color:var(--mu)">${fi(S.iban)}</div>
+ <div class="tiles"><div class="tile" data-g="pay">${ico('pay')}Bezahlen</div><div class="tile" data-g="card">${ico('card')}Karte</div><div class="tile" data-g="users">${ico('users')}Freunde</div><div class="tile" data-g="set">${ico('set')}Mehr</div></div>
+ <div class="card"><div class="row"><b>Abzüge</b><span class="badge">${S.subs.length} Abos</span></div><p style="margin:6px 0 0">Laufende Abos: ${S.subs.length?eur(subsum)+' pro Minute / Monat':'keine'}</p><p style="margin:0">Offene Rechnungen: ${open.length} (${eur(open.reduce((s,b)=>s+b.a,0))})</p></div>
+ ${open.map(b=>`<div class="card row"><div><b>${b.l}</b><div style="font-size:13px;color:var(--mu)">${eur(b.a)}</div></div><button class="btn sm" data-bill="${b.id}">Bezahlen</button></div>`).join('')}
+ <h2>Umsätze</h2><div class="card">${txList(S.txs.slice(0,12))}</div>`;
+ v.querySelectorAll('[data-g]').forEach(e=>e.onclick=()=>{tab=e.dataset.g;render()});
+ v.querySelectorAll('[data-bill]').forEach(b=>b.onclick=()=>{const bl=S.bills.find(x=>x.id==b.dataset.bill);confirmPay(bl.l,bl.a,false,()=>{bl.paid=true;move(-bl.a,bl.l,'bill')})});
+ const el=$('#bal');countTo(el,shown,S.bal);shown=S.bal}
+function rCard(v){const c=S.card;
+ v.innerHTML=`<h1>Karte</h1><p>Tippe auf die Karte, um sie zu drehen.</p>
+ <div class="flip ${S.flip?'f':''} ${c.locked?'lock':''}" id="fl"><div>
+ <div class="face"><div class="row"><b style="font-size:20px">Gingo</b><span>${c.locked?'Gesperrt':'Debit'}</span></div><div style="font-size:21px;letter-spacing:2px;font-weight:600">${fi(c.num)}</div><div class="row"><span>${c.name}</span><span>${c.exp}</span></div></div>
+ <div class="face b"><div class="strip"></div><div class="sig" style="margin-top:20px">${c.cvc}</div><div style="padding:0 20px;font-size:12px;margin-top:14px">${c.name}<br>${fi(S.iban)}<br>Gültig bis ${c.exp}. Diese Karte ist nicht echt.</div></div></div></div>
+ <button class="btn s" id="lk" style="margin-bottom:10px">${c.locked?'Karte entsperren':'Karte sperren'}</button>
+ <button class="btn d" id="lost">Karte verloren</button>`;
+ $('#fl').onclick=()=>{S.flip=!S.flip;$('#fl').classList.toggle('f',S.flip)};
+ $('#lk').onclick=()=>{c.locked=!c.locked;save();toast(c.locked?'Karte gesperrt':'Karte entsperrt');rCard(v)};
+ $('#lost').onclick=()=>help(v)}
+function help(v){
+ v.innerHTML=`<div class="help"><button class="btn sm s" id="bk">Zurück</button><h1 style="margin-top:16px">Hilfecenter</h1><p>Wir helfen dir sofort weiter.</p>
+ <div class="card"><b>Karte verloren oder gestohlen?</b><p style="margin:6px 0 12px">Sperre deine Karte jetzt, damit niemand sie nutzen kann.</p><button class="btn" id="bl">Karte jetzt sperren</button></div>
+ <details><summary>Wann bekomme ich eine neue Karte?</summary><p style="margin-top:8px">Nach dem Sperren kannst du in den Einstellungen unter Karte neue Daten festlegen.</p></details>
+ <details><summary>Wurden Zahlungen ohne mein Wissen ausgeführt?</summary><p style="margin-top:8px">Prüfe deine Umsätze auf der Startseite und sperre die Karte.</p></details>
+ <details><summary>Wie ändere ich meinen Namen auf der Karte?</summary><p style="margin-top:8px">Öffne Mehr, dann Kartendaten.</p></details>
+ <p style="font-size:12px;margin-top:20px">Gingo Bank ist eine Spaß-App. Es gibt keinen echten Support.</p></div>`;
+ $('#bk').onclick=()=>rCard(v);$('#bl').onclick=()=>{S.card.locked=true;save();toast('Karte gesperrt. Hilfe ist unterwegs.');rCard(v)}}
+
+/* ---------- Pay ---------- */
+function confirmPay(to,amt,scam,done){
+ const sh=document.createElement('div');sh.className='sheet';
+ sh.innerHTML=`<div><h2 style="margin-top:0">Zahlung bestätigen</h2><p style="color:var(--tx)">Möchten Sie ${eur(amt)} an ${to} überweisen?</p>
+ ${(scam||S.scam)?'<div class="card" style="border-color:var(--no);color:var(--no)">Warnung: Das könnte Betrug sein. Bezahlen Sie nur, wenn Sie dem Empfänger vertrauen.</div>':''}
+ <button class="btn" id="bio">Mit Face ID oder Touch ID bestätigen</button><p style="text-align:center;margin:10px 0">oder</p>
+ <input id="cp" type="password" placeholder="Zahlungspasswort"><button class="btn s" id="cf">Mit Passwort bestätigen</button><button class="btn d" id="cx" style="margin-top:10px">Abbrechen</button></div>`;
+ $('#app').appendChild(sh);const ok=()=>{sh.remove();tick('Zahlung erfolgreich','Vielen Dank. '+eur(amt)+' an '+to+' wurden bezahlt.');snd('pay');done()};
+ $('#bio').onclick=()=>{if(S.card.locked)return toast('Die Karte ist gesperrt');ok()};
+ $('#cf').onclick=()=>{if(S.card.locked)return toast('Die Karte ist gesperrt');$('#cp').value===S.payPw?ok():toast('Falsches Passwort')};
+ $('#cx').onclick=()=>sh.remove()}
+function tick(t,s){const o=document.createElement('div');o.className='ov';o.style.zIndex=40;o.style.textAlign='center';
+ o.innerHTML=`<svg class="check" viewBox="0 0 120 120"><circle cx="60" cy="60" r="54"/><path d="M36 62l16 16 32-34"/></svg><h1>${t}</h1><p>${s||''}</p>`;$('#app').appendChild(o);setTimeout(()=>o.remove(),2200)}
+function rPay(v){const n=S.nfc;
+ v.innerHTML=`<h1>Kontaktlos bezahlen</h1><p>Halte dein Gerät an ein Terminal. Die Kasse stellst du unter Mehr ein.</p>
+ <div class="card" style="text-align:center;padding:40px 16px"><svg width="90" height="90" viewBox="0 0 24 24" fill="none" stroke="var(--a)" stroke-width="1.5" stroke-linecap="round"><path d="${IC.pay}"/><path d="M3 12a9 9 0 0 1 18 0"/></svg><div style="margin:14px 0 20px">${n.store?n.store+' · '+eur(n.amt)+' · '+(n.mode==='inf'?'unbegrenzt':n.left+' mal'):'Keine Kasse eingestellt'}</div><button class="btn" id="tap">Terminal suchen</button></div>`;
+ $('#tap').onclick=()=>{const hasCfg=n.store&&(n.mode==='inf'||n.left>0);const store=hasCfg?n.store:'Kasse',amt=hasCfg?n.amt:Math.round((2+Math.random()*78)*100)/100;
+  const o=document.createElement('div');o.className='ov';o.style.zIndex=25;o.style.textAlign='center';o.innerHTML=`<svg class="check" viewBox="0 0 120 120"><circle cx="60" cy="60" r="54"/><path d="M36 62l16 16 32-34"/></svg><h1>${store} gefunden</h1><p>${eur(amt)}</p>`;$('#app').appendChild(o);snd('in');
+  setTimeout(()=>{o.remove();confirmPay(store,amt,false,()=>{move(-amt,store,'nfc');if(hasCfg&&n.mode!=='inf'){n.left--;if(n.left<=0){n.store=''}}save();rPay(v)})},1500)}}
+
+/* ---------- Friends (lokal) ---------- */
+function rFriends(v){
+ v.innerHTML=`<h1>Gingo-Freunde</h1><p>Freunde können dir Geld schicken. Du nimmst es an oder schickst es zurück.</p>
+ ${S.reqs.length?S.reqs.map((r,i)=>`<div class="card"><b>${r.from}</b> möchte dir ${eur(r.amt)} senden<div class="row" style="margin-top:10px"><button class="btn sm" data-a="${i}">Annehmen</button><button class="btn sm s" data-r="${i}">Zurückschicken</button></div></div>`).join(''):'<div class="card"><p style="margin:0">Keine offenen Anfragen.</p></div>'}
+ <h2>Freund hinzufügen</h2><input id="fn" placeholder="Name oder Gingo-Name"><button class="btn s" id="fa">Hinzufügen</button>
+ <h2>Deine Freunde</h2>${S.friends.length?S.friends.map((f,i)=>`<div class="card row"><span>${f}</span><button class="btn sm s" data-s="${i}">Geld anfordern</button></div>`).join(''):'<p>Noch keine Freunde.</p>'}
+ <p style="font-size:12px;margin-top:14px">Hinweis: Die Online-Verbindung über Firebase ist in dieser Version noch nicht aktiv. Anfragen werden auf diesem Gerät simuliert.</p>`;
+ $('#fa').onclick=()=>{const n=$('#fn').value.trim();if(n){S.friends.push(n);save();rFriends(v)}};
+ v.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{S.reqs.push({from:S.friends[b.dataset.s],amt:Math.round((5+Math.random()*95)*100)/100});save();toast('Anfrage von '+S.friends[b.dataset.s]+' eingegangen');rFriends(v)});
+ v.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{const r=S.reqs.splice(b.dataset.a,1)[0];save();move(r.amt,r.from,'friend');rFriends(v)});
+ v.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{S.reqs.splice(b.dataset.r,1);save();toast('Geld zurückgeschickt');rFriends(v)})}
+
+/* ---------- Settings ---------- */
+function rSet(v){const n=S.nfc,g=S.gen;
+ v.innerHTML=`<h1>Einstellungen</h1>
+ <h2>Thema der App</h2><div class="sw">${Object.entries(THEMES).map(([k,c])=>`<i title="${k}" data-c="${c}" style="background:${c};${S.theme===c?'border-color:#fff':''}"></i>`).join('')}</div>
+ <h2>Geld senden</h2><div class="card"><label>Absender (z. B. Oma Renate)</label><input id="sf" placeholder="Absender"><label>Verwendungszweck / Betrag in Euro</label><input id="sa" type="number" placeholder="10"><button class="btn" id="sb">Geld an mich senden</button></div>
+ <h2>Geldgenerator</h2><div class="card"><div class="row"><div style="flex:1"><label>Betrag</label><input id="ga" type="number" value="${g.amt}"></div><div style="flex:1"><label>Nach wie vielen Sekunden?</label><input id="gs" type="number" min="1" value="${g.sec}"></div></div><label>Modus</label><select id="gm"><option value="1">Einmalig nach dieser Zeit</option><option value="0">Immer wieder in diesem Abstand</option></select><p id="gcd" style="margin:0 0 12px;color:var(--tx);font-weight:600"></p><button class="btn ${g.on?'d':''}" id="gb">${g.on?'Generator stoppen':'Generator starten'}</button></div>
+ <h2>Rechnung erstellen</h2><div class="card"><input id="rl" placeholder="Bezeichnung (z. B. Stromrechnung)"><input id="ra" type="number" placeholder="Betrag"><button class="btn s" id="rb">Rechnung anlegen</button></div>
+ <h2>Abos und Verträge</h2><div class="card"><input id="al" placeholder="Name (z. B. Telefonvertrag)"><input id="ar" type="number" step="0.01" placeholder="Preis pro Minute in Euro"><button class="btn s" id="ab">Abo abschließen</button>
+ ${S.subs.map((s,i)=>`<div class="row tx"><span>${s.l} · ${eur(s.rate)}/min</span><button class="btn sm d" data-ds="${i}">Kündigen</button></div>`).join('')}</div>
+ <h2>Kontaktlos-Einstellungen</h2><div class="card"><label>Kasse (z. B. Rewe-Kasse)</label><input id="ns" value="${n.store}"><label>Betrag in Euro</label><input id="na" type="number" value="${n.amt||''}"><label>Wie oft</label><select id="nm"><option value="once">einmalig</option><option value="2">zweimal</option><option value="3">dreimal</option><option value="inf">unendlich</option></select><div class="row"><button class="btn sm" id="nb">Speichern</button><button class="btn sm d" id="nd">Löschen</button></div></div>
+ <h2>Kartendaten</h2><div class="card"><label>Name auf der Karte</label><input id="cn" value="${S.card.name}"><button class="btn s" id="cb">Name ändern</button></div>
+ <h2>Sicherheit</h2><div class="card"><label>App-Passwort (leer = keins)</label><input id="pp" type="password" inputmode="numeric" maxlength="4" value="${S.pin}"><button class="btn s" id="pb" style="margin-bottom:12px">App-Passwort speichern</button>
+ <label class="row" style="color:var(--tx)">Betrugswarnung bei Zahlungen anzeigen<input type="checkbox" id="sc" style="width:22px;margin:0" ${S.scam?'checked':''}></label></div>
+ <button class="btn d" id="rs" style="margin-top:20px">Alles zurücksetzen</button>`;
+ $('#nm').value=n.mode==='inf'?'inf':n.mode==='once'?'once':String(n.cnt||n.left||'once');
+ v.querySelectorAll('[data-c]').forEach(e=>e.onclick=()=>{S.theme=e.dataset.c;save();applyTheme();rSet(v)});
+ $('#sb').onclick=()=>{const a=+$('#sa').value;if(!(a>0))return toast('Bitte gib einen Betrag ein');move(a,$('#sf').value.trim()||'Unbekannt','self');rSet(v)};
+ $('#gm').value=g.once?'1':'0';$('#gb').onclick=()=>{g.amt=+$('#ga').value||1;g.sec=Math.max(1,+$('#gs').value||10);g.once=$('#gm').value==='1';g.on=!g.on;g.last=Date.now();save();rSet(v)};
+ $('#rb').onclick=()=>{const a=+$('#ra').value,l=$('#rl').value.trim();if(!l||!(a>0))return toast('Bezeichnung und Betrag fehlen');S.bills.push({id:Date.now(),l,a,paid:false});save();toast('Rechnung angelegt');tab='home';render()};
+ $('#ab').onclick=()=>{const r=+$('#ar').value,l=$('#al').value.trim();if(!l||!(r>0))return toast('Name und Preis fehlen');S.subs.push({l,rate:r});save();toast(l+' abgeschlossen');rSet(v)};
+ v.querySelectorAll('[data-ds]').forEach(b=>b.onclick=()=>{S.subs.splice(b.dataset.ds,1);save();rSet(v)});
+ $('#nb').onclick=()=>{const m=$('#nm').value;n.store=$('#ns').value.trim();n.amt=+$('#na').value||0;n.mode=m==='once'?'once':m==='inf'?'inf':'n';n.cnt=m==='once'?1:+m||0;n.left=m==='inf'?0:(m==='once'?1:+m);if(n.mode==='n'&&n.left===1)n.mode='once';save();toast('Kontaktlos gespeichert')};
+ $('#nd').onclick=()=>{S.nfc={store:'',amt:0,mode:'once',left:0};save();rSet(v)};
+ $('#cb').onclick=()=>{S.card.name=$('#cn').value.trim().toUpperCase()||S.card.name;save();toast('Name geändert')};
+ $('#pb').onclick=()=>{const q=$('#pp').value;if(q&&!/^\d{4}$/.test(q))return toast('Die App-PIN besteht aus 4 Ziffern');S.pin=q;save();toast(S.pin?'App-Passwort gespeichert':'Kein App-Passwort')};
+ $('#sc').onchange=e=>{S.scam=e.target.checked;save()};
+ $('#rs').onclick=()=>{if(confirm('Alle Daten löschen?')){try{localStorage.removeItem('gingo')}catch(e){}S=null;shown=0;disclaimer()}}}
+
+/* ---------- Hintergrund: Generator, Abos, zufällige Rechnungen ---------- */
+setInterval(()=>{if(!S||!S.setup||!sessionOk)return;const g=S.gen;if(g&&g.on&&Date.now()-(g.last||0)>=g.sec*1000){g.last=Date.now();if(g.once){g.on=false;if(tab==='set')setTimeout(()=>rSet($('#view')),50)}move(g.amt,g.name||'Geldgenerator','gen');save()}},1000);
+setInterval(()=>{if(!S||!S.setup||!sessionOk)return;S.subs.forEach(s=>move(-s.rate,s.l+' (Minutenabrechnung)','sub'));
+ if(Math.random()<.12){const o=[['Stromrechnung',64.9],['Internet',39.99],['Versicherung',27.5],['Streaming',12.99],['Wasser',18.4]][Math.floor(Math.random()*5)];S.bills.push({id:Date.now(),l:o[0],a:o[1],paid:false});save();toast('Neue Rechnung: '+o[0]);if(tab==='home')render()}},60000);
+
+document.addEventListener('click',e=>{const b=e.target.closest('.btn');if(!b)return;const r=b.getBoundingClientRect(),d=Math.max(r.width,r.height),s=document.createElement('span');s.className='rip';s.style.cssText=`width:${d}px;height:${d}px;left:${e.clientX-r.left-d/2}px;top:${e.clientY-r.top-d/2}px`;b.appendChild(s);setTimeout(()=>s.remove(),700)});
+const _tick=tick;tick=function(t,s){_tick(t,s);const cs=['#E3B93C','#7A4FD6','#17935B','#5AC8E6','#F08A7A'];for(let i=0;i<28;i++){const p=document.createElement('i');p.className='pt';const a=Math.random()*6.28,r=90+Math.random()*130;p.style.cssText=`--x:${Math.cos(a)*r}px;--y:${Math.sin(a)*r}px;background:${cs[i%5]}`;$('#app').appendChild(p);setTimeout(()=>p.remove(),1250)}};
+const ICD='<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5h11v14H9l-6-7z"/><path d="M13 10l4 4M17 10l-4 4"/></svg>',ICF='<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2M9 10v1.5M15 10v1.5M12 10v4h-1M9 16c2 1.5 4 1.5 6 0"/></svg>';
+function padHTML(bio){return `<div class="dots">${'<i class="dot"></i>'.repeat(4)}</div><div class="kp">${[1,2,3,4,5,6,7,8,9].map(n=>`<button class="k" data-k="${n}">${n}</button>`).join('')}${bio?`<button class="k g" data-k="bio" aria-label="Face ID">${ICF}</button>`:'<span></span>'}<button class="k" data-k="0">0</button><button class="k g" data-k="del" aria-label="Löschen">${ICD}</button></div>`}
+function pinCtl(root,bio,onFull){let v='';const ds=root.querySelectorAll('.dot'),box=root.querySelector('.dots');
+ const draw=()=>ds.forEach((d,i)=>d.classList.toggle('on',i<v.length));
+ const ctl={err(){box.classList.add('shake','bad');setTimeout(()=>{box.classList.remove('shake','bad');v='';draw()},520)}};
+ const press=k=>{if(root.querySelector('.scanl')||v.length>3)return;if(k==='bio')return bio();if(k==='del'){v=v.slice(0,-1);return draw()}v+=k;draw();if(v.length===4)setTimeout(()=>onFull(v,ctl),80)};
+ root.addEventListener('click',e=>{const b=e.target.closest('[data-k]');if(b)press(b.dataset.k)});
+ const kh=e=>{if(!root.isConnected)return document.removeEventListener('keydown',kh);if(/^\d$/.test(e.key))press(e.key);else if(e.key==='Backspace')press('del')};document.addEventListener('keydown',kh);return ctl}
+function scanUI(host,msg,done){const s=document.createElement('div');s.className='scanl';s.innerHTML=`<svg width="96" height="96" viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M8 28V14a6 6 0 0 1 6-6h14M68 8h14a6 6 0 0 1 6 6v14M88 68v14a6 6 0 0 1-6 6H68M28 88H14a6 6 0 0 1-6-6V68"/><path class="fc" d="M36 38v6M60 38v6M48 40v12h-4M38 64c6 6 14 6 20 0"/><line class="ln" x1="14" y1="48" x2="82" y2="48"/></svg><div>${msg}</div>`;host.appendChild(s);setTimeout(()=>{s.querySelector('div').textContent='Bestätigt';s.classList.add('okd')},600);setTimeout(()=>{s.remove();done()},950)}
+function notif(from,amt){document.querySelectorAll('.notif').forEach(x=>x.remove());const n=document.createElement('div');n.className='notif';
+ n.innerHTML=`<div class="ni"><svg width="26" height="26" viewBox="0 0 100 100"><path d="M50 90V50M50 50C20 50 8 28 14 12c14 2 30 6 36 38 6-32 22-36 36-38 6 16-6 38-36 38z" fill="none" stroke="#1B1630" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="nt"><div class="row"><b>Gingo Bank</b><span>jetzt</span></div><div class="nh">Geld erhalten</div><div class="nb"><b>+${eur(amt)}</b> von ${from}</div></div><i class="np"></i>`;
+ n.onclick=()=>n.remove();$('#app').appendChild(n);setTimeout(()=>n.classList.add('out'),4200);setTimeout(()=>n.remove(),4800)}
+tick=function(t,s,bad){const o=document.createElement('div');o.className='ov res'+(bad?' bad':'');o.style.zIndex=60;o.style.textAlign='center';o.innerHTML=`<svg class="rs" viewBox="0 0 120 120"><circle cx="60" cy="60" r="54"/>${bad?'<path d="M42 42l36 36M78 42L42 78"/>':'<path d="M36 62l16 16 32-34"/>'}</svg><h1>${t}</h1><p>${s||''}</p>`;$('#app').appendChild(o);setTimeout(()=>{o.classList.add('gone');setTimeout(()=>o.remove(),300)},1300)};
+confirmPay=function(to,amt,scam,done){if(S.card.locked)return tick('Zahlung abgelehnt','Deine Karte ist gesperrt.',1);
+ const sh=document.createElement('div');sh.className='sheet';
+ sh.innerHTML=`<div><h2 style="margin-top:0;text-align:center">Zahlung bestätigen</h2><p style="color:var(--tx);text-align:center">Möchten Sie ${eur(amt)} an ${to} überweisen?</p>${(scam||S.scam)?'<div class="card" style="border-color:var(--no);color:var(--no);padding:12px;font-size:14px">Warnung: Das könnte Betrug sein. Bezahlen Sie nur, wenn Sie dem Empfänger vertrauen.</div>':''}${padHTML(true)}<button class="btn d" id="cx" style="margin-top:14px">Abbrechen</button></div>`;
+ $('#app').appendChild(sh);const box=sh.firstChild;let tries=0;
+ const ok=()=>{sh.remove();tick('Zahlung erfolgreich','Vielen Dank. '+eur(amt)+' an '+to+' wurden bezahlt.');snd('pay');done()};
+ const no=m=>{sh.remove();tick('Zahlung abgelehnt',m||'Es wurde nichts abgebucht.',1)};
+ pinCtl(box,()=>scanUI(box,'Face ID wird überprüft…',ok),(v,c)=>{if(v===S.payPw)scanUI(box,'PIN wird geprüft…',ok);else{c.err();if(++tries>=3)setTimeout(()=>no('Zu viele falsche Eingaben.'),600)}});
+ $('#cx').onclick=()=>no()};
+lock=function(){$('#nav').hidden=true;const h=new Date().getHours(),g=h<11?'Guten Morgen':h<18?'Guten Tag':'Guten Abend',ini=S.name.split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase();
+ $('#view').innerHTML=`<div class="ov lk"><div class="lg">${ini}</div><h1>${g}, ${S.name.split(' ')[0]}</h1><p>Gib deine PIN ein, um Gingo Bank zu öffnen.</p>${padHTML(true)}<p style="margin-top:18px;font-size:13px">Konto ···· ${S.iban.slice(-4)}</p></div>`;
+ const root=$('#view .ov'),done=()=>{root.classList.add('unl');setTimeout(main,320)};
+ pinCtl(root,()=>scanUI(root,'Face ID wird überprüft…',done),(v,c)=>{if(v===S.pin)done();else{c.err();toast('Falsche PIN')}})};
+if(S&&S.setup){if(S.pin&&!/^\d{4}$/.test(S.pin))S.pin='';if(!/^\d{4}$/.test(S.payPw||''))S.payPw='1234';save()}
+const AC=()=>{window._ac=window._ac||new (window.AudioContext||window.webkitAudioContext)();return window._ac};
+function bell(f,t,d,g){const c=AC(),o=c.currentTime+t;[[1,1],[2.01,.35],[3.98,.12]].forEach(([m,a])=>{const x=c.createOscillator(),y=c.createGain();x.type='sine';x.frequency.value=f*m;y.gain.setValueAtTime(.0001,o);y.gain.exponentialRampToValueAtTime(g*a,o+.012);y.gain.exponentialRampToValueAtTime(.0001,o+d);x.connect(y);y.connect(c.destination);x.start(o);x.stop(o+d+.05)})}
+snd=function(t){try{if(S&&S.mute)return;if(t==='pay'){bell(1318.5,0,.9,.3);bell(1760,.1,1.1,.26);bell(2637,.1,.5,.06)}else if(t==='in'){[1046.5,1318.5,1568,2093].forEach((f,i)=>bell(f,i*.085,1,.22))}else if(t==='no'){bell(392,0,.6,.25);bell(294,.14,.8,.25)}}catch(e){}};
+const _t2=tick;tick=function(t,s,b){_t2(t,s,b);if(b)snd('no')};
+const LEAFS='<svg width="26" height="26" viewBox="0 0 100 100"><path d="M50 90V50M50 50C20 50 8 28 14 12c14 2 30 6 36 38 6-32 22-36 36-38 6 16-6 38-36 38z" fill="none" stroke="#1B1630" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+function cash(a){try{navigator.vibrate&&navigator.vibrate([40,30,40,30,90])}catch(e){}const app=$('#app');app.classList.remove('glow');void app.offsetWidth;app.classList.add('glow');setTimeout(()=>app.classList.remove('glow'),1500);
+ const w=document.createElement('i');w.className='wave';app.appendChild(w);setTimeout(()=>w.remove(),1300);
+ const n=Math.min(36,8+Math.floor(a/20));for(let i=0;i<n;i++){const c=document.createElement('i');c.className='coin';c.style.cssText=`left:${Math.random()*96}%;animation-delay:${Math.random()*.9}s;animation-duration:${1.6+Math.random()*1.2}s;--r:${(Math.random()*720-360)|0}deg;--s:${16+(Math.random()*14|0)}px`;app.appendChild(c);setTimeout(()=>c.remove(),3500)}
+ setTimeout(()=>{const b=$('#bal');if(b){b.classList.remove('bump');void b.offsetWidth;b.classList.add('bump')}},80)}
+function receipt(from,amt){const sh=document.createElement('div');sh.className='sheet';sh.innerHTML=`<div style="text-align:center"><div class="ni" style="margin:0 auto 12px;width:64px;height:64px;border-radius:20px">${LEAFS}</div><div style="color:var(--mu)">Geld erhalten</div><div class="bal" style="font-size:44px;margin:4px 0 14px">+${eur(amt)}</div><div class="card" style="text-align:left"><div class="row"><span>Von</span><b>${from}</b></div><div class="row tx"><span>Zeit</span><b>${fmtD(Date.now())}</b></div><div class="row tx"><span>Konto</span><b>···· ${S.iban.slice(-4)}</b></div><div class="row tx"><span>Neuer Kontostand</span><b>${eur(S.bal)}</b></div></div><button class="btn" id="rc">Fertig</button></div>`;$('#app').appendChild(sh);$('#rc').onclick=()=>sh.remove();sh.onclick=e=>{if(e.target===sh)sh.remove()}}
+notif=function(from,amt){document.querySelectorAll('.notif').forEach(x=>x.remove());const n=document.createElement('div');n.className='notif';
+ n.innerHTML=`<div class="ni">${LEAFS}</div><div class="nt"><div class="row"><b>Gingo Bank</b><span>jetzt</span></div><div class="nh">Geld erhalten</div><div class="nb"><b class="cu">+${eur(0)}</b> von ${from}</div><div style="font-size:12px;color:var(--mu)">Tippen für den Beleg</div></div><i class="np"></i>`;
+ const cu=n.querySelector('.cu'),t0=performance.now();(function f(t){const p=Math.min(1,(t-t0)/900);cu.textContent='+'+eur(amt*(1-Math.pow(1-p,3)));if(p<1)requestAnimationFrame(f)})(t0);
+ n.onclick=()=>{n.remove();receipt(from,amt)};$('#app').appendChild(n);setTimeout(()=>n.classList.add('out'),5000);setTimeout(()=>n.remove(),5600)};
+const lum=h=>{h=h.replace('#','');const n=parseInt(h.length===3?h.replace(/./g,'$&$&'):h,16);return(.299*(n>>16)+.587*(n>>8&255)+.114*(n&255))/255};
+const VISA='<svg viewBox="0 0 84 30" width="74" height="27"><text x="0" y="25" font-family="Arial,Helvetica,sans-serif" font-weight="900" font-style="italic" font-size="31" fill="currentColor" letter-spacing="-1">VISA</text></svg>';
+const PRE=[['#1B1630','#5B3FC4'],['#0F2E2A','#1F8F6F'],['#7A1F2B','#E04F5F'],['#0B3A66','#4AA8F0'],['#2B2B2B','#777777'],['#E3B93C','#A07A10'],['#EDEDF5','#B9B9C8'],['#3A1F5C','#D067B8']];
+function cardHTML(){const c=S.card,c1=c.c1||'#1B1630',c2=c.c2||'#5B3FC4',tc=lum(c1)*.6+lum(c2)*.4>.6?'#1B1630':'#fff',bg=`background:linear-gradient(135deg,${c1},${c2});color:${tc}`;
+ return `<div class="flip ${S.flip?'f':''} ${c.locked?'lock':''}" id="fl"><div><div class="face" style="${bg}"><div class="row"><div class="row" style="gap:10px">${c.logo?`<img src="${c.logo}" alt="" style="width:38px;height:38px;border-radius:10px;object-fit:cover">`:''}<b style="font-size:18px">${c.text||'Gingo'}</b></div><span>${c.locked?'Gesperrt':'Debit'}</span></div><div class="chip"></div><div style="font-size:20px;letter-spacing:2px;font-weight:600">${fi(c.num)}</div><div class="row"><div><div style="font-size:11px;opacity:.7">Karteninhaber</div>${c.name}</div><div style="text-align:right"><div style="font-size:11px;opacity:.7">Gültig bis</div>${c.exp}</div>${VISA}</div></div><div class="face b" style="${bg}"><div class="strip"></div><div class="sig" style="margin-top:18px;color:#1B1630">${c.cvc}</div><div style="padding:0 20px;font-size:12px;margin-top:12px">${c.name}<br>${fi(S.iban)}</div><div style="padding:0 20px;margin-top:auto;text-align:right">${VISA}</div></div></div></div>`}
+rCard=function(v){const c=S.card;
+ v.innerHTML=`<h1>Karte</h1><p>Tippe auf die Karte, um sie zu drehen.</p><div id="cb">${cardHTML()}</div><div class="row" style="gap:10px;margin-bottom:10px"><button class="btn s" id="lk">${c.locked?'Karte entsperren':'Karte sperren'}</button><button class="btn s" id="ed">Karte bearbeiten</button></div><button class="btn d" id="lost">Karte verloren</button>
+ <div id="edp" hidden class="card" style="margin-top:14px"><h2 style="margin-top:0">Karte bearbeiten</h2><label>Farbe</label><div class="sw" style="flex-wrap:wrap">${PRE.map((p,i)=>`<i data-p="${i}" style="background:linear-gradient(135deg,${p[0]},${p[1]})"></i>`).join('')}</div><div class="row" style="gap:10px"><div style="flex:1"><label>Farbe 1</label><input type="color" id="c1" value="${c.c1||'#1B1630'}" style="padding:4px;height:44px"></div><div style="flex:1"><label>Farbe 2</label><input type="color" id="c2" value="${c.c2||'#5B3FC4'}" style="padding:4px;height:44px"></div></div><label>Text auf der Karte (z. B. Visa)</label><input id="ct" maxlength="18" placeholder="Gingo" value="${c.text||''}"><label>Name auf der Karte</label><input id="cn2" value="${c.name}"><label>Logo aus der Galerie</label><input type="file" id="cf" accept="image/*"><button class="btn sm d" id="cr">Bild entfernen</button></div>`;
+ const bf=()=>{$('#fl').onclick=()=>{S.flip=!S.flip;$('#fl').classList.toggle('f',S.flip)}},rf=()=>{$('#cb').innerHTML=cardHTML();bf();save()};bf();
+ $('#lk').onclick=()=>{c.locked=!c.locked;save();toast(c.locked?'Karte gesperrt':'Karte entsperrt');rCard(v)};$('#lost').onclick=()=>help(v);$('#ed').onclick=()=>{const p=$('#edp');p.hidden=!p.hidden;if(!p.hidden)p.scrollIntoView({behavior:'smooth'})};
+ v.querySelectorAll('[data-p]').forEach(e=>e.onclick=()=>{const p=PRE[e.dataset.p];c.c1=p[0];c.c2=p[1];$('#c1').value=p[0];$('#c2').value=p[1];rf()});
+ $('#c1').oninput=e=>{c.c1=e.target.value;rf()};$('#c2').oninput=e=>{c.c2=e.target.value;rf()};$('#ct').oninput=e=>{c.text=e.target.value;rf()};$('#cn2').oninput=e=>{c.name=e.target.value.toUpperCase()||S.name.toUpperCase();rf()};
+ $('#cr').onclick=()=>{c.logo='';rf();toast('Bild entfernt')};
+ $('#cf').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const s=96,cv=document.createElement('canvas');cv.width=cv.height=s;const x=cv.getContext('2d'),m=Math.min(im.width,im.height);x.drawImage(im,(im.width-m)/2,(im.height-m)/2,m,m,0,0,s,s);c.logo=cv.toDataURL('image/jpeg',.85);rf();toast('Logo gesetzt')};im.src=r.result};r.readAsDataURL(f)}};
+const hue=s=>{let h=0;for(const ch of s)h=(h*31+ch.charCodeAt(0))%360;return h};
+function ask(title,sub,cb){const sh=document.createElement('div');sh.className='sheet';sh.innerHTML=`<div><h2 style="margin-top:0">${title}</h2><p>${sub}</p><label>Betrag in Euro</label><input id="qa" type="number" inputmode="decimal" placeholder="0,00"><label>Nachricht (optional)</label><input id="qn" maxlength="40" placeholder="z. B. Pizza gestern"><button class="btn" id="qo">Weiter</button><button class="btn s" id="qc" style="margin-top:10px">Abbrechen</button></div>`;$('#app').appendChild(sh);$('#qc').onclick=()=>sh.remove();$('#qo').onclick=()=>{const a=Math.round(+$('#qa').value*100)/100,n=$('#qn').value.trim();if(!(a>0))return toast('Bitte gib einen Betrag ein');sh.remove();cb(a,n)}}
+rFriends=function(v){S.friends=S.friends.map(f=>typeof f==='string'?{n:f,h:[]}:f);S.tag=S.tag||'@'+S.name.split(' ')[0].toLowerCase().replace(/[^a-z0-9]/g,'')+Math.floor(100+Math.random()*900);
+ const av=f=>`<div class="av" style="background:hsl(${hue(f.n)} 70% 78%)">${f.n[0].toUpperCase()}</div>`,rr=()=>{if(tab==='users')rFriends($('#view'))};
+ v.innerHTML=`<h1>Gingo-Freunde</h1><div class="card row"><div><div style="font-size:13px;color:var(--mu)">Dein Gingo-Name</div><b style="font-size:20px">${S.tag}</b></div><button class="btn sm s" id="cp">Kopieren</button></div>
+ ${S.reqs.length?'<h2>Anfragen</h2>'+S.reqs.map((r,i)=>`<div class="card"><div class="row" style="justify-content:flex-start;gap:12px">${av({n:r.from})}<div><b>${r.from}</b> möchte dir <b>${eur(r.amt)}</b> senden${r.note?`<div style="font-size:13px;color:var(--mu)">${r.note}</div>`:''}</div></div><div class="row" style="margin-top:12px"><button class="btn sm" data-a="${i}">Annehmen</button><button class="btn sm s" data-r="${i}">Zurückschicken</button></div></div>`).join(''):''}
+ <h2>Freund hinzufügen</h2><div class="row" style="gap:8px;align-items:flex-start"><input id="fn" placeholder="Name oder @Gingo-Name" style="margin-bottom:0"><button class="btn sm" id="fa" style="padding:14px 18px">Hinzufügen</button></div>
+ <h2>Deine Freunde</h2>${S.friends.length?S.friends.map((f,i)=>`<div class="card"><div class="row" style="justify-content:flex-start;gap:12px">${av(f)}<div style="flex:1;min-width:0"><b>${f.n}</b><div style="font-size:12px;color:var(--mu)">${f.h.length?f.h[0]:'Noch keine Aktivität'}</div></div></div><div class="row" style="margin-top:12px;gap:8px"><button class="btn sm" data-s="${i}" style="flex:1">Senden</button><button class="btn sm s" data-q="${i}" style="flex:1">Anfordern</button></div></div>`).join(''):'<p>Noch keine Freunde. Füge oben jemanden hinzu.</p>'}
+ <button class="btn s" id="tst" style="margin-top:6px">Testanfrage von einem Freund</button><p style="font-size:12px;margin-top:14px">Die Online-Verbindung (Firebase) folgt. Bis dahin reagieren deine Freunde simuliert auf diesem Gerät.</p>`;
+ $('#cp').onclick=()=>{try{navigator.clipboard.writeText(S.tag)}catch(e){}toast('Gingo-Name kopiert')};
+ $('#fa').onclick=()=>{const n=$('#fn').value.trim();if(!n)return;if(S.friends.some(f=>f.n.toLowerCase()===n.toLowerCase()))return toast('Das ist schon dein Freund');S.friends.unshift({n,h:['Neu hinzugefügt']});save();rFriends(v)};
+ $('#tst').onclick=()=>{if(!S.friends.length)return toast('Füge zuerst einen Freund hinzu');const f=S.friends[Math.floor(Math.random()*S.friends.length)];S.reqs.push({from:f.n,amt:Math.round((5+Math.random()*95)*100)/100,note:['Für gestern','Danke dir!','Kinoabend','Geburtstagsgeschenk'][Math.floor(Math.random()*4)]});save();toast('Neue Anfrage von '+f.n);rFriends(v)};
+ v.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{const f=S.friends[b.dataset.s];ask('Geld senden','An '+f.n,(a,n)=>confirmPay(f.n,a,false,()=>{move(-a,'An '+f.n+(n?' · '+n:''),'friend');f.h.unshift('Du hast '+eur(a)+' gesendet');save();rr();toast('Warte auf '+f.n+' …');setTimeout(()=>{if(Math.random()<.8){f.h.unshift(f.n+' hat angenommen');toast(f.n+' hat angenommen')}else{f.h.unshift('hat '+eur(a)+' zurückgeschickt');move(a,f.n+' (zurückgeschickt)','friend')}save();rr()},3500+Math.random()*3000)}))});
+ v.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{const f=S.friends[b.dataset.q];ask('Geld anfordern','Von '+f.n,(a,n)=>{toast('Anfrage an '+f.n+' gesendet');f.h.unshift('Du hast '+eur(a)+' angefordert');save();rr();setTimeout(()=>{if(Math.random()<.8){f.h.unshift('hat '+eur(a)+' bezahlt');move(a,f.n+(n?' · '+n:''),'friend')}else{f.h.unshift('hat abgelehnt');toast(f.n+' hat abgelehnt')}save();rr()},3000+Math.random()*3000)})});
+ v.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{const r=S.reqs.splice(b.dataset.a,1)[0];save();move(r.amt,r.from+(r.note?' · '+r.note:''),'friend');rFriends(v)});
+ v.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{S.reqs.splice(b.dataset.r,1);save();toast('Geld zurückgeschickt');rFriends(v)})};
+setInterval(()=>{const e=$('#gcd');if(!e||!S||!S.gen)return;const g=S.gen;e.textContent=g.on?'Nächste Zahlung in '+Math.max(0,Math.ceil((g.sec*1000-(Date.now()-g.last))/1000))+' s':'Generator ist aus'},250);
+var logo=(s,c)=>`<svg class="${c||''}" width="${s}" height="${s}" viewBox="0 0 100 100"><defs><linearGradient id="lg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7A5BE8"/><stop offset="1" stop-color="#2B1B6E"/></linearGradient></defs><rect width="100" height="100" rx="26" fill="url(#lg1)"/><path d="M71 37A26 26 0 1 0 75 56H52" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><circle cx="73" cy="27" r="6" fill="#E3B93C"/></svg>`;
+const ib=p=>`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${p}"/></svg>`;
+const NL=()=>S.nfc.list||(S.nfc.list=[]);let flt='all';
+splash=function(){$('#view').innerHTML=`<div class="ov" style="align-items:center;text-align:center">${logo(120,'leaf')}<div class="logo" style="margin-top:14px">Gingo Bank</div><p style="margin-top:6px">Dein Konto. Deine Regeln.</p></div>`;setTimeout(()=>S&&S.setup?(S.pin?lock():main()):setup(),1400)};
+notif=function(from,amt){document.querySelectorAll('.notif').forEach(x=>x.remove());const neg=amt<0,a=Math.abs(amt),n=document.createElement('div');n.className='notif';
+ n.innerHTML=`<div class="ni">${logo(46)}</div><div class="nt"><div class="row"><b>Gingo Bank</b><span>jetzt</span></div><div class="nh">${neg?'Zahlung':'Geld erhalten'}</div><div class="nb"><b class="cu" style="${neg?'color:var(--tx)':''}">${neg?'-':'+'}${eur(0)}</b> ${neg?'an':'von'} ${from}</div>${neg?'':'<div style="font-size:12px;color:var(--mu)">Tippen für den Beleg</div>'}</div><i class="np"></i>`;
+ const cu=n.querySelector('.cu'),t0=performance.now();(function f(t){const p=Math.min(1,(t-t0)/600);cu.textContent=(neg?'-':'+')+eur(a*(1-Math.pow(1-p,3)));if(p<1)requestAnimationFrame(f)})(t0);
+ n.onclick=()=>{n.remove();if(!neg)receipt(from,a)};$('#app').appendChild(n);setTimeout(()=>n.classList.add('out'),3500);setTimeout(()=>n.remove(),3900)};
+receipt=function(from,amt){const sh=document.createElement('div');sh.className='sheet';sh.innerHTML=`<div style="text-align:center"><div class="ni" style="margin:0 auto 10px">${logo(46)}</div><div style="color:var(--mu)">Geld erhalten</div><div class="bal" style="font-size:44px;margin:4px 0 14px">+${eur(amt)}</div><div class="card" style="text-align:left"><div class="row"><span>Von</span><b>${from}</b></div><div class="row tx"><span>Zeit</span><b>${fmtD(Date.now())}</b></div><div class="row tx"><span>Konto</span><b>···· ${S.iban.slice(-4)}</b></div><div class="row tx"><span>Neuer Kontostand</span><b>${eur(S.bal)}</b></div></div><button class="btn" id="rc">Fertig</button></div>`;$('#app').appendChild(sh);$('#rc').onclick=()=>sh.remove();sh.onclick=e=>{if(e.target===sh)sh.remove()}};
+cash=function(a){if(!S.nohap)try{navigator.vibrate&&navigator.vibrate([30,30,60])}catch(e){}const app=$('#app');app.classList.remove('glow');void app.offsetWidth;app.classList.add('glow');setTimeout(()=>app.classList.remove('glow'),1000);
+ const n=Math.min(14,5+Math.floor(a/40));for(let i=0;i<n;i++){const c=document.createElement('i');c.className='coin';c.style.cssText=`left:${Math.random()*96}%;animation-delay:${Math.random()*.4}s;animation-duration:${.9+Math.random()*.7}s;--r:${(Math.random()*540-270)|0}deg;--s:${16+(Math.random()*10|0)}px`;app.appendChild(c);setTimeout(()=>c.remove(),1800)}
+ setTimeout(()=>{const b=$('#bal');if(b){b.classList.remove('bump');void b.offsetWidth;b.classList.add('bump')}},80)};
+rHome=function(v){const open=S.bills.filter(b=>!b.paid),subsum=S.subs.reduce((s,x)=>s+x.rate,0),inn=S.txs.filter(t=>t.a>0).reduce((s,t)=>s+t.a,0),out=S.txs.filter(t=>t.a<0).reduce((s,t)=>s-t.a,0),list=S.txs.filter(t=>flt==='all'||(flt==='in'?t.a>0:t.a<0)).slice(0,15);
+ v.innerHTML=`<div class="row" style="justify-content:flex-start;gap:12px">${logo(40)}<div><div style="font-size:13px;color:var(--mu)">Hallo ${S.name.split(' ')[0]}</div><b>Girokonto</b></div></div><div class="hero"><div style="font-size:13px;opacity:.7">Kontostand</div><div class="bal" id="bal">${eur(shown)}</div><div style="font-size:13px;opacity:.7">${fi(S.iban)}</div></div>
+ <div class="tiles"><div class="tile" data-g="pay">${ico('pay')}Bezahlen</div><div class="tile" data-g="card">${ico('card')}Karte</div><div class="tile" data-g="users">${ico('users')}Freunde</div><div class="tile" data-g="set">${ico('set')}Mehr</div></div>
+ <div class="card row"><div><div style="font-size:13px;color:var(--mu)">Eingang</div><b class="pos">+${eur(inn)}</b></div><div style="text-align:right"><div style="font-size:13px;color:var(--mu)">Ausgang</div><b>-${eur(out)}</b></div></div>
+ <div class="card"><div class="row"><b>Abzüge</b><span class="badge">${S.subs.length} Abos</span></div><p style="margin:6px 0 0">Laufende Abos: ${S.subs.length?eur(subsum)+' pro Minute':'keine'}</p><p style="margin:0">Offene Rechnungen: ${open.length} (${eur(open.reduce((s,b)=>s+b.a,0))})</p></div>
+ ${open.map(b=>`<div class="card row"><div><b>${b.l}</b><div style="font-size:13px;color:var(--mu)">${eur(b.a)}</div></div><button class="btn sm" data-bill="${b.id}">Bezahlen</button></div>`).join('')}
+ <h2>Umsätze</h2><div class="chipf">${[['all','Alle'],['in','Eingang'],['out','Ausgang']].map(([k,l])=>`<button data-f="${k}" class="${flt===k?'on':''}">${l}</button>`).join('')}</div><div class="card">${txList(list)}</div>`;
+ v.querySelectorAll('[data-g]').forEach(e=>e.onclick=()=>{tab=e.dataset.g;render()});v.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{flt=b.dataset.f;rHome(v)});
+ v.querySelectorAll('[data-bill]').forEach(b=>b.onclick=()=>{const bl=S.bills.find(x=>x.id==b.dataset.bill);confirmPay(bl.l,bl.a,false,()=>{bl.paid=true;move(-bl.a,bl.l,'bill')})});
+ countTo($('#bal'),shown,S.bal);shown=S.bal};
+rPay=function(v){const L=NL(),f=L[0];
+ v.innerHTML=`<h1>Kontaktlos bezahlen</h1><p>Halte dein Gerät an ein Terminal. Die Kassen-Liste stellst du unter Mehr ein.</p><div class="card" style="text-align:center;padding:34px 16px"><svg width="84" height="84" viewBox="0 0 24 24" fill="none" stroke="var(--a)" stroke-width="1.5" stroke-linecap="round"><path d="${IC.pay}"/><path d="M3 12a9 9 0 0 1 18 0"/></svg><div style="margin:12px 0 18px">${f?'Als Nächstes: '+f.store+' · '+eur(f.amt):'Keine Kasse eingestellt'}</div><button class="btn" id="tap">Terminal suchen</button></div>${L.length>1?`<p style="text-align:center">Danach in der Liste: ${L.length-1} weitere</p>`:''}`;
+ $('#tap').onclick=()=>{const f=NL()[0],store=f?f.store:'Kasse',amt=f?f.amt:Math.round((2+Math.random()*78)*100)/100;
+  const o=document.createElement('div');o.className='ov res';o.style.zIndex=25;o.style.textAlign='center';o.innerHTML=`<svg class="rs" viewBox="0 0 120 120"><circle cx="60" cy="60" r="54"/><path d="M36 62l16 16 32-34"/></svg><h1>${store} gefunden</h1><p>${eur(amt)}</p>`;$('#app').appendChild(o);try{if(!S.mute)bell(1568,0,.5,.2)}catch(e){}
+  setTimeout(()=>{o.remove();confirmPay(store,amt,false,()=>{move(-amt,store,'nfc');if(f&&f.mode!=='inf'&&--f.left<=0)NL().shift();save();if(tab==='pay')rPay(v)})},800)}};
+rSet=function(v){const g=S.gen;
+ v.innerHTML=`<h1>Einstellungen</h1><h2>Thema der App</h2><div class="sw">${Object.entries(THEMES).map(([k,c])=>`<i title="${k}" data-c="${c}" style="background:${c};${S.theme===c?'border-color:#fff':''}"></i>`).join('')}</div>
+ <h2>Geld senden</h2><div class="card"><label>Absender (z. B. Oma Renate)</label><input id="sf" placeholder="Absender"><label>Betrag in Euro</label><input id="sa" type="number" inputmode="decimal" placeholder="10"><button class="btn" id="sb">Geld an mich senden</button></div>
+ <h2>Geldgenerator</h2><div class="card"><label>Name (von wem kommt das Geld?)</label><input id="gn" value="${g.name||''}" placeholder="z. B. Taschengeld"><div class="row" style="gap:10px"><div style="flex:1"><label>Betrag in Euro</label><input id="ga" type="number" value="${g.amt}"></div><div style="flex:1"><label>Sekunden</label><input id="gs" type="number" min="1" value="${g.sec}"></div></div><label>Modus</label><select id="gm"><option value="1">Einmalig nach dieser Zeit</option><option value="0">Immer wieder in diesem Abstand</option></select><p id="gcd" style="margin:0 0 12px;color:var(--tx);font-weight:600"></p><button class="btn ${g.on?'d':''}" id="gb">${g.on?'Generator stoppen':'Generator starten'}</button></div>
+ <h2>Rechnung erstellen</h2><div class="card"><input id="rl" placeholder="Bezeichnung (z. B. Stromrechnung)"><input id="ra" type="number" placeholder="Betrag"><button class="btn s" id="rb">Rechnung anlegen</button></div>
+ <h2>Abos und Verträge</h2><div class="card"><input id="al" placeholder="Name (z. B. Telefonvertrag)"><input id="ar" type="number" step="0.01" placeholder="Preis pro Minute in Euro"><button class="btn s" id="ab">Abo abschließen</button>${S.subs.map((s,i)=>`<div class="q"><b>${s.l} · ${eur(s.rate)}/min</b><button class="btn sm d" data-ds="${i}">Kündigen</button></div>`).join('')}</div>
+ <h2>Kontaktlos</h2><div class="card"><label>Kasse (z. B. Rewe-Kasse)</label><input id="ns"><label>Betrag in Euro</label><input id="na" type="number" inputmode="decimal"><label>Wie oft</label><select id="nm"><option value="1">einmalig</option><option value="2">zweimal</option><option value="3">dreimal</option><option value="inf">unendlich</option></select><button class="btn" id="nb">Zur Liste hinzufügen</button></div><div class="card" id="nl"></div>
+ <h2>Karte bearbeiten</h2><div class="card"><div id="cb">${cardHTML()}</div><label>Farbe</label><div class="sw" style="flex-wrap:wrap">${PRE.map((p,i)=>`<i data-p="${i}" style="background:linear-gradient(135deg,${p[0]},${p[1]})"></i>`).join('')}</div><div class="row" style="gap:10px"><div style="flex:1"><label>Farbe 1</label><input type="color" id="c1" value="${S.card.c1||'#1B1630'}" style="padding:4px;height:44px"></div><div style="flex:1"><label>Farbe 2</label><input type="color" id="c2" value="${S.card.c2||'#5B3FC4'}" style="padding:4px;height:44px"></div></div><label>Text auf der Karte (z. B. Visa)</label><input id="ct" maxlength="18" placeholder="Gingo" value="${S.card.text||''}"><label>Name auf der Karte</label><input id="cn2" value="${S.card.name}"><label>Logo aus der Galerie</label><input type="file" id="cf" accept="image/*"><button class="btn sm d" id="cr">Bild entfernen</button></div>
+ <h2>App installieren</h2><div class="card"><p style="margin:0 0 10px">Tippe im Browser auf Teilen und dann auf Zum Home-Bildschirm, dann startet Gingo Bank wie eine echte App.</p>${window.dip?'<button class="btn s" id="ins">App installieren</button>':''}</div><h2>Profil und Sicherheit</h2><div class="card"><label>Dein Name</label><input id="pn" value="${S.name}"><label>Gingo-Name</label><input id="pt" value="${S.tag||''}" placeholder="@name"><button class="btn s" id="ps" style="margin-bottom:12px">Profil speichern</button><label>App-PIN (4 Ziffern, leer = keine)</label><input id="pp" type="password" inputmode="numeric" maxlength="4" value="${S.pin}"><button class="btn s" id="pb" style="margin-bottom:12px">App-PIN speichern</button><label>Zahlungs-PIN (4 Ziffern)</label><input id="pq" type="password" inputmode="numeric" maxlength="4" value="${S.payPw}"><button class="btn s" id="pqb" style="margin-bottom:12px">Zahlungs-PIN speichern</button>
+ <label class="row" style="color:var(--tx);margin-bottom:10px">Betrugswarnung bei Zahlungen<input type="checkbox" id="sc" style="width:22px;margin:0" ${S.scam?'checked':''}></label><label class="row" style="color:var(--tx);margin-bottom:10px">Töne<input type="checkbox" id="sd" style="width:22px;margin:0" ${S.mute?'':'checked'}></label><label class="row" style="color:var(--tx)">Vibration<input type="checkbox" id="sh" style="width:22px;margin:0" ${S.nohap?'':'checked'}></label><label class="row" style="color:var(--tx);margin-top:10px">Dunkler Modus<input type="checkbox" id="dk" style="width:22px;margin:0" ${S.light?'':'checked'}></label></div><button class="btn d" id="rs" style="margin-top:20px">Alles zurücksetzen</button>`;
+ $('#gm').value=g.once?'1':'0';
+ v.querySelectorAll('[data-c]').forEach(e=>e.onclick=()=>{S.theme=e.dataset.c;save();applyTheme();rSet(v)});
+ $('#sb').onclick=()=>{const a=+$('#sa').value;if(!(a>0))return toast('Bitte gib einen Betrag ein');move(a,$('#sf').value.trim()||'Unbekannt','self');$('#sa').value=''};
+ $('#gb').onclick=()=>{g.name=$('#gn').value.trim();g.amt=+$('#ga').value||1;g.sec=Math.max(1,+$('#gs').value||10);g.once=$('#gm').value==='1';g.on=!g.on;g.last=Date.now();save();rSet(v)};
+ $('#rb').onclick=()=>{const a=+$('#ra').value,l=$('#rl').value.trim();if(!l||!(a>0))return toast('Bezeichnung und Betrag fehlen');S.bills.push({id:Date.now(),l,a,paid:false});save();toast('Rechnung angelegt');tab='home';render()};
+ $('#ab').onclick=()=>{const r=+$('#ar').value,l=$('#al').value.trim();if(!l||!(r>0))return toast('Name und Preis fehlen');S.subs.push({l,rate:r});save();toast(l+' abgeschlossen');rSet(v)};
+ v.querySelectorAll('[data-ds]').forEach(b=>b.onclick=()=>{S.subs.splice(b.dataset.ds,1);save();rSet(v)});
+ const drawNL=()=>{const L=NL(),el=$('#nl');el.innerHTML=`<div class="row"><b>Deine Liste (${L.length})</b><span style="display:flex;gap:6px"><button class="btn sm s" data-so="n">A bis Z</button><button class="btn sm s" data-so="a">Betrag</button></span></div>`+(L.length?L.map((x,i)=>`<div class="q"><b>${i+1}. ${x.store}<div style="font-size:12px;color:var(--mu);font-weight:400">${eur(x.amt)} · ${x.mode==='inf'?'unendlich':x.left+' mal'}</div></b><button class="ib" data-u="${i}" aria-label="Nach oben">${ib('M6 15l6-6 6 6')}</button><button class="ib" data-d="${i}" aria-label="Nach unten">${ib('M6 9l6 6 6-6')}</button><button class="ib" data-x="${i}" aria-label="Entfernen">${ib('M6 6l12 12M18 6L6 18')}</button></div>`).join(''):'<p style="margin:10px 0 0">Noch nichts eingegeben.</p>');
+  const sw=(i,j)=>{if(j<0||j>=L.length)return;[L[i],L[j]]=[L[j],L[i]];save();drawNL()};
+  el.querySelectorAll('[data-u]').forEach(b=>b.onclick=()=>sw(+b.dataset.u,b.dataset.u-1));el.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>sw(+b.dataset.d,+b.dataset.d+1));el.querySelectorAll('[data-x]').forEach(b=>b.onclick=()=>{L.splice(b.dataset.x,1);save();drawNL()});
+  el.querySelectorAll('[data-so]').forEach(b=>b.onclick=()=>{if(b.dataset.so==='n')L.sort((x,y)=>x.store.localeCompare(y.store));else{S.nfc.asc=!S.nfc.asc;L.sort((x,y)=>S.nfc.asc?x.amt-y.amt:y.amt-x.amt)}save();drawNL()})};drawNL();
+ $('#nb').onclick=()=>{const s=$('#ns').value.trim(),a=Math.round(+$('#na').value*100)/100,m=$('#nm').value;if(!s||!(a>0))return toast('Kasse und Betrag fehlen');NL().push({id:Date.now(),store:s,amt:a,mode:m==='inf'?'inf':'n',left:m==='inf'?0:+m});save();$('#ns').value='';$('#na').value='';drawNL();toast(s+' zur Liste hinzugefügt')};
+ const cd=S.card,bf=()=>{$('#fl').onclick=()=>{S.flip=!S.flip;$('#fl').classList.toggle('f',S.flip)}},rf=()=>{$('#cb').innerHTML=cardHTML();bf();save()};bf();
+ v.querySelectorAll('[data-p]').forEach(e=>e.onclick=()=>{const p=PRE[e.dataset.p];cd.c1=p[0];cd.c2=p[1];$('#c1').value=p[0];$('#c2').value=p[1];rf()});
+ $('#c1').oninput=e=>{cd.c1=e.target.value;rf()};$('#c2').oninput=e=>{cd.c2=e.target.value;rf()};$('#ct').oninput=e=>{cd.text=e.target.value;rf()};$('#cn2').oninput=e=>{cd.name=e.target.value.toUpperCase()||S.name.toUpperCase();rf()};
+ $('#cr').onclick=()=>{cd.logo='';rf();toast('Bild entfernt')};
+ $('#cf').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const s=96,cv=document.createElement('canvas');cv.width=cv.height=s;const x=cv.getContext('2d'),m=Math.min(im.width,im.height);x.drawImage(im,(im.width-m)/2,(im.height-m)/2,m,m,0,0,s,s);cd.logo=cv.toDataURL('image/jpeg',.85);rf();toast('Logo gesetzt')};im.src=r.result};r.readAsDataURL(f)};
+ $('#ps').onclick=()=>{S.name=$('#pn').value.trim()||S.name;const t=$('#pt').value.trim();if(t)S.tag=t.startsWith('@')?t:'@'+t;save();toast('Profil gespeichert')};
+ $('#pb').onclick=()=>{const q=$('#pp').value;if(q&&!/^\d{4}$/.test(q))return toast('Die App-PIN besteht aus 4 Ziffern');S.pin=q;save();toast(q?'App-PIN gespeichert':'Keine App-PIN')};
+ $('#pqb').onclick=()=>{const q=$('#pq').value;if(!/^\d{4}$/.test(q))return toast('Die Zahlungs-PIN besteht aus 4 Ziffern');S.payPw=q;save();toast('Zahlungs-PIN gespeichert')};
+ $('#sc').onchange=e=>{S.scam=e.target.checked;save()};$('#sd').onchange=e=>{S.mute=!e.target.checked;save()};$('#sh').onchange=e=>{S.nohap=!e.target.checked;save()};$('#dk').onchange=e=>{S.light=!e.target.checked;save();applyTheme()};$('#ins')&&($('#ins').onclick=()=>window.dip&&window.dip.prompt());
+ $('#rs').onclick=()=>{if(confirm('Alle Daten löschen?')){try{localStorage.removeItem('gingo')}catch(e){}S=null;shown=0;disclaimer()}}};
+const DIR=['Lena Krüger','Max Becker','Oma Renate','Sophie Wagner','Tim Hoffmann','Mia Schulz','Jonas Weber','Emma Fischer','Noah Klein','Lara Neumann','Paul Richter','Hannah Wolf'];
+const tagOf=n=>'@'+n.toLowerCase().replace(/[^a-z0-9]+/g,'.').replace(/^\.|\.$/g,'');
+function text(title,val,cb){const sh=document.createElement('div');sh.className='sheet';sh.innerHTML=`<div><h2 style="margin-top:0">${title}</h2><input id="tv" maxlength="30" value="${val}"><button class="btn" id="to">Speichern</button><button class="btn s" id="tc" style="margin-top:10px">Abbrechen</button></div>`;$('#app').appendChild(sh);$('#tv').focus();$('#tc').onclick=()=>sh.remove();$('#to').onclick=()=>{const t=$('#tv').value.trim();if(!t)return;sh.remove();cb(t)}}
+rFriends=function(v){S.friends=S.friends.map(f=>typeof f==='string'?{n:f,h:[]}:f);S.friends.forEach(f=>{f.tag=f.tag||tagOf(f.n)});S.tag=S.tag||tagOf(S.name)+Math.floor(10+Math.random()*90);
+ const av=f=>`<div class="av" style="background:hsl(${hue(f.n)} 70% 78%)">${f.n[0].toUpperCase()}</div>`,rr=()=>{if(tab==='users')rFriends($('#view'))};
+ v.innerHTML=`<h1>Gingo-Freunde</h1><div class="card row"><div><div style="font-size:13px;color:var(--mu)">Dein Gingo-Name</div><b style="font-size:20px">${S.tag}</b></div><button class="btn sm s" id="cp">Kopieren</button></div>
+ ${S.reqs.length?'<h2>Anfragen</h2>'+S.reqs.map((r,i)=>`<div class="card"><div class="row" style="justify-content:flex-start;gap:12px">${av({n:r.from})}<div><b>${r.from}</b> möchte dir <b>${eur(r.amt)}</b> senden${r.note?`<div style="font-size:13px;color:var(--mu)">${r.note}</div>`:''}</div></div><div class="row" style="margin-top:12px"><button class="btn sm" data-a="${i}">Annehmen</button><button class="btn sm s" data-r="${i}">Zurückschicken</button></div></div>`).join(''):''}
+ <h2>Freunde finden</h2><input id="fn" placeholder="Name oder @Gingo-Name suchen" style="margin-bottom:6px"><div id="fr"></div>
+ <h2>Deine Freunde (${S.friends.length})</h2>${S.friends.length?S.friends.map((f,i)=>`<div class="card"><div class="row" style="justify-content:flex-start;gap:12px">${av(f)}<div style="flex:1;min-width:0"><b>${f.n}</b> <span style="font-size:12px;color:var(--mu)">${f.tag}</span><div style="font-size:12px;color:var(--mu)">${f.h.length?f.h[0]:'Noch keine Aktivität'}</div></div></div><div class="row" style="margin-top:12px;gap:8px"><button class="btn sm" data-s="${i}" style="flex:1">Senden</button><button class="btn sm s" data-q="${i}" style="flex:1">Anfordern</button><button class="ib" data-n="${i}" aria-label="Umbenennen">${ib('M4 20h4L19 9l-4-4L4 16zM14 6l4 4')}</button><button class="ib" data-x="${i}" aria-label="Entfernen">${ib('M6 6l12 12M18 6L6 18')}</button></div></div>`).join(''):'<p>Noch keine Freunde. Suche oben nach jemandem.</p>'}
+ <button class="btn s" id="tst" style="margin-top:6px">Testanfrage von einem Freund</button><p style="font-size:12px;margin-top:14px">Die Suche zeigt Beispielnutzer. Echte Nutzer findest du, sobald Firebase verbunden ist.</p>`;
+ const drawR=()=>{const q=$('#fn').value.trim().toLowerCase(),have=S.friends.map(f=>f.tag);let r=DIR.map(n=>({n,tag:tagOf(n)})).filter(u=>!have.includes(u.tag)&&(!q||u.n.toLowerCase().includes(q)||u.tag.includes(q))).slice(0,q?6:4);if(q&&!have.includes(tagOf(q))&&!r.some(u=>u.n.toLowerCase()===q))r.unshift({n:$('#fn').value.trim(),tag:tagOf(q)});
+  $('#fr').innerHTML=r.length?r.map((u,i)=>`<div class="card row" style="padding:10px 14px;margin-bottom:8px"><div class="row" style="gap:10px">${av(u)}<div><b>${u.n}</b><div style="font-size:12px;color:var(--mu)">${u.tag}</div></div></div><button class="btn sm" data-ad="${i}">Hinzufügen</button></div>`).join(''):'<p>Niemanden gefunden.</p>';
+  $('#fr').querySelectorAll('[data-ad]').forEach(b=>b.onclick=()=>{const u=r[b.dataset.ad];S.friends.unshift({n:u.n,tag:u.tag,h:['Neu hinzugefügt']});save();toast(u.n+' hinzugefügt');rFriends(v)})};drawR();$('#fn').oninput=drawR;
+ $('#cp').onclick=()=>{try{navigator.clipboard.writeText(S.tag)}catch(e){}toast('Gingo-Name kopiert')};
+ $('#tst').onclick=()=>{if(!S.friends.length)return toast('Füge zuerst einen Freund hinzu');const f=S.friends[Math.floor(Math.random()*S.friends.length)];S.reqs.push({from:f.n,amt:Math.round((5+Math.random()*95)*100)/100,note:['Für gestern','Danke dir!','Kinoabend','Geburtstagsgeschenk'][Math.floor(Math.random()*4)]});save();toast('Neue Anfrage von '+f.n);rFriends(v)};
+ v.querySelectorAll('[data-n]').forEach(b=>b.onclick=()=>{const f=S.friends[b.dataset.n];text('Freund umbenennen',f.n,t=>{f.n=t;save();rr()})});
+ v.querySelectorAll('[data-x]').forEach(b=>b.onclick=()=>{S.friends.splice(b.dataset.x,1);save();rFriends(v)});
+ v.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{const f=S.friends[b.dataset.s];ask('Geld senden','An '+f.n,(a,n)=>confirmPay(f.n,a,false,()=>{move(-a,'An '+f.n+(n?' · '+n:''),'friend');f.h.unshift('Du hast '+eur(a)+' gesendet');save();rr();toast('Warte auf '+f.n+' …');setTimeout(()=>{if(Math.random()<.8){f.h.unshift(f.n+' hat angenommen');toast(f.n+' hat angenommen')}else{f.h.unshift('hat '+eur(a)+' zurückgeschickt');move(a,f.n+' (zurückgeschickt)','friend')}save();rr()},2500+Math.random()*2500)}))});
+ v.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{const f=S.friends[b.dataset.q];ask('Geld anfordern','Von '+f.n,(a,n)=>{toast('Anfrage an '+f.n+' gesendet');f.h.unshift('Du hast '+eur(a)+' angefordert');save();rr();setTimeout(()=>{if(Math.random()<.8){f.h.unshift('hat '+eur(a)+' bezahlt');move(a,f.n+(n?' · '+n:''),'friend')}else{f.h.unshift('hat abgelehnt');toast(f.n+' hat abgelehnt')}save();rr()},2000+Math.random()*2500)})});
+ v.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{const r=S.reqs.splice(b.dataset.a,1)[0];save();move(r.amt,r.from+(r.note?' · '+r.note:''),'friend');rFriends(v)});
+ v.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{S.reqs.splice(b.dataset.r,1);save();toast('Geld zurückgeschickt');rFriends(v)})};
+if(S&&S.setup){const n=S.nfc;if(!n.list)n.list=n.store?[{id:Date.now(),store:n.store,amt:n.amt,mode:n.mode==='inf'?'inf':'n',left:n.mode==='inf'?0:(n.left||1)}]:[];save()}
+const mqT=matchMedia('(min-width:700px)');
+function cols(){const v=$('#view');if(!mqT.matches||v.children.length<5||v.querySelector(':scope>.ov')||v.querySelector(':scope>.cw'))return;
+ const k=[...v.children],hs=k.map(e=>e.offsetHeight+12),tot=hs.reduce((a,b)=>a+b,0);let acc=0,i=0;while(i<k.length-1&&acc+hs[i]/2<tot/2){acc+=hs[i];i++}
+ if(i>0&&/^H[12]$/.test(k[i-1].tagName))i--;if(i<1)i=1;
+ const w=document.createElement('div'),a=document.createElement('div'),b=document.createElement('div');w.className='cw';a.className='cc';b.className='cc';k.forEach((e,j)=>(j<i?a:b).appendChild(e));w.append(a,b);v.appendChild(w)}
+new MutationObserver(cols).observe($('#view'),{childList:true});
+mqT.onchange=()=>{const n=$('#nav');if(S&&S.setup&&n&&!n.hidden)render()};
+rCard=function(v){const c=S.card;v.innerHTML=`<h1>Karte</h1><p>Tippe auf die Karte, um sie zu drehen. Bearbeiten kannst du sie unter Mehr.</p><div id="cb">${cardHTML()}</div><div><button class="btn s" id="lk" style="margin-bottom:10px">${c.locked?'Karte entsperren':'Karte sperren'}</button><button class="btn d" id="lost">Karte verloren</button></div>`;
+ $('#fl').onclick=()=>{S.flip=!S.flip;$('#fl').classList.toggle('f',S.flip)};$('#lk').onclick=()=>{c.locked=!c.locked;save();toast(c.locked?'Karte gesperrt':'Karte entsperrt');rCard(v)};$('#lost').onclick=()=>help(v)};
+rFriends=function(v){S.friends=S.friends.map(f=>typeof f==='string'?{n:f,h:[]}:f);S.friends.forEach(f=>{f.tag=f.tag||tagOf(f.n);f.h=f.h||[]});S.tag=S.tag||tagOf(S.name)+Math.floor(10+Math.random()*90);
+ const av=f=>`<div class="av" style="background:hsl(${hue(f.n)} 70% 80%)">${f.n[0].toUpperCase()}</div>`,rr=()=>{if(tab==='users')rFriends($('#view'))};
+ v.innerHTML=`<h1>Gingo-Freunde</h1><div class="card row"><div><div style="font-size:13px;color:var(--mu)">Dein Gingo-Name</div><b style="font-size:20px">${S.tag}</b></div><button class="btn sm s" id="cp">Kopieren</button></div>
+ ${S.reqs.length?'<h2>Anfragen</h2>'+S.reqs.map((r,i)=>`<div class="card"><div class="row" style="justify-content:flex-start;gap:12px">${av({n:r.from})}<div><b>${r.from}</b> möchte dir <b>${eur(r.amt)}</b> senden${r.note?`<div style="font-size:13px;color:var(--mu)">${r.note}</div>`:''}</div></div><div class="row" style="margin-top:12px"><button class="btn sm" data-a="${i}">Annehmen</button><button class="btn sm s" data-r="${i}">Zurückschicken</button></div></div>`).join(''):''}
+ <h2>Freund hinzufügen</h2><div class="row" style="gap:8px;align-items:flex-start"><input id="fn" placeholder="Name oder @Gingo-Name" style="margin-bottom:0"><button class="btn sm" id="fa" style="padding:14px 18px">Hinzufügen</button></div>
+ <h2>Deine Freunde (${S.friends.length})</h2>${S.friends.length?S.friends.map((f,i)=>`<div class="card"><div class="row" style="justify-content:flex-start;gap:12px">${av(f)}<div style="flex:1;min-width:0"><b>${f.n}</b> <span style="font-size:12px;color:var(--mu)">${f.tag}</span><div style="font-size:12px;color:var(--mu)">${f.h.length?f.h[0]:'Noch keine Aktivität'}</div></div></div><div class="row" style="margin-top:12px;gap:8px"><button class="btn sm" data-s="${i}" style="flex:1">Senden</button><button class="ib" data-n="${i}" aria-label="Umbenennen">${ib('M4 20h4L19 9l-4-4L4 16zM14 6l4 4')}</button><button class="ib" data-x="${i}" aria-label="Entfernen">${ib('M6 6l12 12M18 6L6 18')}</button></div></div>`).join(''):'<p>Noch keine Freunde.</p>'}
+ <p style="font-size:12px;margin-top:14px">Freunde online finden und Anfragen erhalten funktioniert, sobald Firebase verbunden ist.</p>`;
+ $('#cp').onclick=()=>{try{navigator.clipboard.writeText(S.tag)}catch(e){}toast('Gingo-Name kopiert')};
+ $('#fa').onclick=()=>{const t=$('#fn').value.trim();if(!t)return;const tg=t.startsWith('@')?t:tagOf(t);if(S.friends.some(f=>f.tag===tg))return toast('Das ist schon dein Freund');S.friends.unshift({n:t.replace(/^@/,''),tag:tg,h:[]});save();rFriends(v)};
+ v.querySelectorAll('[data-n]').forEach(b=>b.onclick=()=>{const f=S.friends[b.dataset.n];text('Freund umbenennen',f.n,t=>{f.n=t;save();rr()})});
+ v.querySelectorAll('[data-x]').forEach(b=>b.onclick=()=>{S.friends.splice(b.dataset.x,1);save();rFriends(v)});
+ v.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{const f=S.friends[b.dataset.s];ask('Geld senden','An '+f.n,(a,n)=>confirmPay(f.n,a,false,()=>{move(-a,'An '+f.n+(n?' · '+n:''),'friend');f.h.unshift('Du hast '+eur(a)+' gesendet');save();rr()}))});
+ v.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{const r=S.reqs.splice(b.dataset.a,1)[0];save();move(r.amt,r.from+(r.note?' · '+r.note:''),'friend');rFriends(v)});
+ v.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{S.reqs.splice(b.dataset.r,1);save();toast('Anfrage abgelehnt');rFriends(v)})};
+applyTheme=function(){document.documentElement.style.setProperty('--a',S&&S.theme||'#E3B93C');document.documentElement.classList.toggle('light',!!(S&&S.light))};
+toast=function(m){const t=$('#toast'),bad=/falsch|fehl|ungültig|mindestens|nicht |zu viele|abgelehnt|bitte |gesperrt|besteht aus|stimmen|vergeben|keine verbindung/i.test(m);t.textContent=m;t.classList.toggle('bad',bad);t.classList.remove('on');void t.offsetWidth;t.classList.add('on');
+ if(bad){try{if(!(S&&S.nohap))navigator.vibrate&&navigator.vibrate(60)}catch(e){}const a=document.activeElement,i=a&&a.tagName==='INPUT'&&a.type!=='checkbox'?a:[...document.querySelectorAll('.sheet input,#view input')].find(x=>!x.value&&x.type!=='file'&&x.type!=='checkbox'&&x.type!=='color');if(i){i.classList.remove('err');void i.offsetWidth;i.classList.add('err');setTimeout(()=>i.classList.remove('err'),700)}}
+ clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('on'),2800)};
+const SPL=`<svg class="s-tile" width="120" height="120" viewBox="0 0 100 100"><defs><linearGradient id="lg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7A5BE8"/><stop offset="1" stop-color="#2B1B6E"/></linearGradient></defs><rect width="100" height="100" rx="26" fill="url(#lg2)"/><path class="lp" d="M71 37A26 26 0 1 0 75 56H52" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><circle class="ld" cx="73" cy="27" r="6" fill="#E3B93C"/></svg>`;
+splash=function(){$('#view').innerHTML=`<div class="ov" style="align-items:center;text-align:center">${SPL}<div class="sl" style="font-size:32px;font-weight:700;margin-top:16px;letter-spacing:-.5px">${[...'Gingo Bank'].map((c,i)=>`<span style="--i:${i}">${c===' '?'&nbsp;':c}</span>`).join('')}</div><p class="sg" style="margin-top:4px">Dein Konto. Deine Regeln.</p><div class="sbar"><i></i></div></div>`;
+ setTimeout(()=>{const o=$('#view .ov');if(o)o.classList.add('sp-out');setTimeout(()=>(window.afterSplash||(()=>S&&S.setup?(S.pin?lock():main()):setup()))(),280)},1600)};
+window.dip=null;addEventListener('beforeinstallprompt',e=>{e.preventDefault();window.dip=e});
+logo=(s,c)=>`<svg class="${c||''}" width="${s}" height="${s}" viewBox="0 0 100 100"><defs><linearGradient id="lg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8B6BFF"/><stop offset="1" stop-color="#2B1B6E"/></linearGradient><linearGradient id="lgg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".3"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs><rect width="100" height="100" rx="24" fill="url(#lg1)"/><rect width="100" height="52" rx="24" fill="url(#lgg)"/><path d="M69.2 36.6A23.4 23.4 0 1 0 73.4 50H50" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/><circle cx="75" cy="29" r="6.6" fill="#E3B93C"/><circle cx="75" cy="29" r="3.4" fill="none" stroke="#B8892A" stroke-width="1.2"/></svg>`;
+splash=function(){$('#view').innerHTML=`<div class="ov sp2"><div class="lw"><div class="rg"><i></i><i style="animation-delay:.25s"></i><i style="animation-delay:.5s"></i></div><svg class="pr" viewBox="0 0 140 140"><circle cx="70" cy="70" r="64"/></svg><div class="lt">${logo(92)}</div></div><div class="wm"><span>Gingo</span><span>Bank</span></div><p class="sg">Dein Konto. Deine Regeln.</p></div>`;
+ setTimeout(()=>{try{if(!(S&&S.mute))bell(1318.5,0,.7,.14)}catch(e){}},1000);
+ setTimeout(()=>{const o=$('#view .ov');if(o)o.classList.add('sp-out');setTimeout(()=>(window.afterSplash||(()=>S&&S.setup?(S.pin?lock():main()):setup()))(),260)},1750)};
+if(!S){S=null}
+disclaimer();
+</script></body></html>
